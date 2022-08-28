@@ -1,5 +1,7 @@
+from constants import *
 import customtkinter as ctk
 import tkinter as tk
+import json
 
 def toolbar_animation(start, stop, step, delay):
     global toolbar_animated
@@ -29,19 +31,19 @@ def resize(event):
         else:
             toolbar.config(height=0, width=event.width)
 
-window_width, window_height = 0, 0
+lang_file = open(lang_path)
+lang = json.load(lang_file)
+lang_file.close
 
 root = ctk.CTk()
 root.bind("<Configure>", resize)
-icon = tk.PhotoImage(file=r'resources\icon.png')
-toolbar_toggle_image = tk.PhotoImage(file=r'resources\toolbar.png')
-hover_color_change = -20
-toolbar_size = 50
-toolbar_animation_time = 100
+icon = tk.PhotoImage(file=icon_path)
+toolbar_toggle_image = tk.PhotoImage(file=toolbar_icon_path)
 
-ctk.set_appearance_mode('dark')
-root.title('Cipher Tool')
-root.geometry('1366x768')
+ctk.set_appearance_mode(mode)
+root.title(lang['title'])
+root.geometry(default_size)
+root.minsize(int(min_size.split('x')[0]), int(min_size.split('x')[1]))
 root.iconphoto(False, icon)
 
 toolbar = ctk.CTkFrame(root)
@@ -51,8 +53,19 @@ toolbar.grid(row=0, column=0, columnspan=3)
 toolbar_active = False
 toolbar_animated = False
 
-hover_color = '#' + ''.join([format(min(max(int(root['bg'].lstrip('#')[i - 1:i + 1], 16) + hover_color_change, 0), 255), '02X') for i in range(1, 7, 2)]) # Lighten/darken background color by hover_color_change
-toolbar_toggle = ctk.CTkButton(root, text='', image=toolbar_toggle_image, command=toggle_toolbar, width=42, height=30, fg_color=root['bg'], hover_color=hover_color) # Note colors are not updated when theme is
+hover_color = '#' + ''.join([format(min(max(int(root['bg'].lstrip('#')[i - 1:i + 1], 16) + hover_color_change, 0), 255), '02X') for i in range(1, 7, 2)])
+toolbar_toggle = ctk.CTkButton(root, text='', image=toolbar_toggle_image, command=toggle_toolbar, width=42, height=30, fg_color=root['bg'], hover_color=hover_color)
 toolbar_toggle.grid(row=1, column=0, padx=5, pady=5, sticky='W')
+
+ctk.CTkLabel(toolbar, text='Toolbar').grid(row=0, column=0)
+
+ctk.CTkLabel(root, text=lang['stage_content']).grid(row=1, column=0)
+ctk.CTkLabel(root, text=lang['stage_list']).grid(row=1, column=1)
+ctk.CTkLabel(root, text=lang['output']).grid(row=1, column=2)
+ctk.CTkTextbox(root).grid(row=2, column=0, sticky='NESW')
+ctk.CTkTextbox(root).grid(row=2, column=2, sticky='NESW')
+root.columnconfigure(0, weight=1)
+root.columnconfigure(2, weight=1)
+root.rowconfigure(2, weight=1)
 
 root.mainloop()
