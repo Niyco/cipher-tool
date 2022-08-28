@@ -5,7 +5,7 @@ mode = 'dark'
 default_size ='1366x768'
 min_size = '576x324'
 hover_color_change = -20
-toolbar_size = 50
+toolbar_size = 75
 toolbar_animation_time = 100
 
 class AnalysisStage:

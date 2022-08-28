@@ -36,11 +36,12 @@ lang = json.load(lang_file)
 lang_file.close
 
 root = ctk.CTk()
-root.bind("<Configure>", resize)
+root.bind('<Configure>', resize)
 icon = tk.PhotoImage(file=icon_path)
 toolbar_toggle_image = tk.PhotoImage(file=toolbar_icon_path)
 
 ctk.set_appearance_mode(mode)
+ctk.set_default_color_theme('green')
 root.title(lang['title'])
 root.geometry(default_size)
 root.minsize(int(min_size.split('x')[0]), int(min_size.split('x')[1]))
@@ -57,7 +58,10 @@ hover_color = '#' + ''.join([format(min(max(int(root['bg'].lstrip('#')[i - 1:i +
 toolbar_toggle = ctk.CTkButton(root, text='', image=toolbar_toggle_image, command=toggle_toolbar, width=42, height=30, fg_color=root['bg'], hover_color=hover_color)
 toolbar_toggle.grid(row=1, column=0, padx=5, pady=5, sticky='W')
 
-ctk.CTkLabel(toolbar, text='Toolbar').grid(row=0, column=0)
+image1 = tk.PhotoImage(file=r'resources\analysis.png')
+ctk.CTkButton(toolbar, text='', image=image1, width=125, height=25, fg_color=toolbar['bg'], hover_color=toolbar['bg']).grid(row=0, column=0, sticky='W')
+ctk.CTkButton(toolbar, text='Ciphers', height=25).grid(row=1, column=0)
+ctk.CTkButton(toolbar, text='Text', height=25).grid(row=2, column=0)
 
 ctk.CTkLabel(root, text=lang['stage_content']).grid(row=1, column=0)
 ctk.CTkLabel(root, text=lang['stage_list']).grid(row=1, column=1)
