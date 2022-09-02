@@ -10,11 +10,12 @@ color_radio_deselected = ['#BBBBBB', '#4C4C4C']
 default_size ='1366x768'
 min_size = '608x342'
 
+check_queue_delay = 100
 hover_color_change = -20
 toolbar_size = 75
 toolbar_step = 5
 toolbar_animation_time = 50
 
-mode_name = 'light'
+mode_name = 'default'
 theme_name = 'green'
 lang_name = 'lang_en'

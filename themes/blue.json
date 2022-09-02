@@ -1,5 +1,6 @@
 {
   "color": {
+	"bg_color": ["#EBEBEC", "#212325"],
     "window_bg_color": ["#EBEBEC", "#212325"],
     "button": ["#3B8ED0", "#1F6AA5"],
     "button_hover": ["#36719F", "#144870"],
