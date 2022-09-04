@@ -40,15 +40,15 @@
   },
   "text": {
     "macOS": {
-      "font": "SF Display",
+      "font": "Courier New",
       "size": -13
     },
     "Windows": {
-      "font": "Roboto",
+      "font": "Courier New",
       "size": -13
     },
     "Linux": {
-      "font": "Roboto",
+      "font": "Courier New",
       "size": -13
     }
   },

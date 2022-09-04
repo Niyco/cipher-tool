@@ -1,7 +1,6 @@
 {
   "color": {
 	"bg_color": ["#EBEBEC", "#212325"],
-	"bg_color": ["#EBEBEC", "#212325"],
     "window_bg_color": ["gray92", "gray12"],
     "button": ["#72CF9F", "#11B384"],
     "button_hover": ["#0E9670", "#0D8A66"],
@@ -41,15 +40,15 @@
   },
   "text": {
     "macOS": {
-      "font": "SF Display",
+      "font": "Courier New",
       "size": -13
     },
     "Windows": {
-      "font": "Roboto",
+      "font": "Courier New",
       "size": -13
     },
     "Linux": {
-      "font": "Roboto",
+      "font": "Courier New",
       "size": -13
     }
   },
