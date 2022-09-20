@@ -2,6 +2,7 @@ theme_path = r'themes'
 lang_path = r'lang'
 path_window_icon = r'resources\icon.png'
 path_toolbar_icon = r'resources\toolbar.png'
+path_stage_remove = r'resources\stage_remove.png'
 path_stage_up = (r'resources\stage_up_light.png', r'resources\stage_up_dark.png')
 path_stage_down = {'green': [r'resources\stage_down_light_1.png', r'resources\stage_down_dark_1.png'],
                    'blue': [r'resources\stage_down_light_2.png', r'resources\stage_down_dark_2.png'],
@@ -18,6 +19,6 @@ toolbar_step = 5
 toolbar_animation_time = 50
 stage_spaceing = 4
 
-mode_name = 'dark'
+mode_name = 'default'
 theme_name = 'green'
 lang_name = 'lang_en'

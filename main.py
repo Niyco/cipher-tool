@@ -37,15 +37,32 @@ if __name__ == '__main__':
             else:
                 toolbar.config(height=0, width=event.width)
         elif isinstance(event.widget, tk.Canvas) and str(event.widget).startswith('.!canvas'):
-            for stage in current_stages:
+            resize_stages()
+
+    def resize_stages():
+        for stage in current_stages:
                 text_y = stages_canvas.coords(stage[2])[1]
                 image_y = stages_canvas.coords(stage[1])[1]
-                stages_canvas.coords(stage[2], event.width // 2, text_y)
-                stages_canvas.coords(stage[1], event.width // 2, image_y)
+                stages_canvas.coords(stage[2], stages_canvas.winfo_width() // 2, text_y)
+                stages_canvas.coords(stage[1], stages_canvas.winfo_width() // 2, image_y)
+    
+    def create_stages():
+        global results, current_stages, selected_stage
 
+        results = []
+        to_add = current_stages.copy()
+        current_stages = []
+        for stage in to_add:
+            add_stage(0, type(stage[0]).__name__, stage[0])
+
+        if selected_stage >= 0:
+            index = selected_stage
+            selected_stage = -1
+            switch_stage(index)
+    
     def create_widgets():
         global toolbar, toolbar_active, tooblar_animated, radio_buttons
-        global stages_canvas, current_stages, stage_frame, stage_output
+        global stages_canvas,stage_frame, stage_output
 
         toolbar_animated = False
         bg_color = named_to_hex(theme['color']['bg_color'][mode])
@@ -94,13 +111,10 @@ if __name__ == '__main__':
         ctk.CTkLabel(root, text=lang['stage_list']).grid(row=1, column=1)
         ctk.CTkLabel(root, text=lang['output']).grid(row=1, column=2)
 
-        to_add = current_stages.copy()
-        current_stages = []
-        for stage in to_add:
-            add_stage(0, type(stage[0]).__name__, stage[0])
+        create_stages()
 
     def update_window():
-        global lang, theme, mode, stage_up_image, stage_down_image, toolbar_active, selected_stage
+        global lang, theme, mode, stage_up_image, stage_down_image, stage_remove_image, toolbar_active
         
         lang_file = open(lang_path + '\\' + lang_name + '.json')
         lang = json.load(lang_file)
@@ -115,6 +129,7 @@ if __name__ == '__main__':
             
         stage_up_image = tk.PhotoImage(file=path_stage_up[mode])
         stage_down_image = tk.PhotoImage(file=path_stage_down[theme_name][mode])
+        stage_remove_image = tk.PhotoImage(file=path_stage_remove)
         root.title(lang['title'])
 
         ctk.set_appearance_mode(mode_name)
@@ -127,10 +142,6 @@ if __name__ == '__main__':
             toolbar_active = False
             toggle_toolbar()
         radio_select(radio_selected)
-        if selected_stage >= 0:
-            index = selected_stage
-            selected_stage = -1
-            switch_stage(index)
 
     def check_queue():
         try:
@@ -205,21 +216,28 @@ if __name__ == '__main__':
     def add_stage(stage_type, name, stage=None):
         length = len(current_stages)
         display_name = lang['stage_' + name.lower()]
-
+        bg_color = named_to_hex(theme['color']['bg_color'][mode])
         y = (stage_up_image.height() + stage_spaceing) * (length + 1)
         image = stages_canvas.create_image(0, y, image=stage_up_image)
         text = stages_canvas.create_text(0, y - 4, text=display_name,
                                          font=(theme['text']['Windows']['font'],
                                                theme['text']['Windows']['size'] + 2),
                                          fill=theme['color']['text'][mode])
-        stages_canvas.tag_bind(image, "<Button-1>", lambda event: switch_stage(length))
-        stages_canvas.tag_bind(text, "<Button-1>", lambda event: switch_stage(length))
+        remove = ctk.CTkButton(stages_canvas, text='', image=stage_remove_image,
+                               width=22, height=22, fg_color=bg_color,
+                               hover_color=adjust(bg_color, hover_color_change),
+                               command=lambda: remove_stage(length)
+                               )
+        remove.place(x=stage_up_image.width() + 25, y=y - 10)
+        
+        stages_canvas.tag_bind(image, '<Button-1>', lambda event: switch_stage(length))
+        stages_canvas.tag_bind(text, '<Button-1>', lambda event: switch_stage(length))
 
         if stage:
             stage.setup(stage_frame)
         else:
             stage = defined_stages[stage_type][name](stage_frame, update_output)
-        current_stages.append((stage, image, text))
+        current_stages.append((stage, image, text, remove))
 
         if name == 'Input':
             results.append(stage.input)
@@ -228,9 +246,19 @@ if __name__ == '__main__':
             
         set_output(results[-1])
 
+    def remove_stage(index):
+        if index != 0:
+            for stage in current_stages:
+                stage[3].destroy()
+            del current_stages[index]
+            stages_canvas.delete('all')
+            create_stages()
+            resize_stages()
+
     def switch_stage(index):
         global selected_stage
-        
+
+        index = min(len(current_stages) - 1, index)
         if selected_stage != index:
             stages_canvas.itemconfigure(current_stages[index][1], image=stage_down_image)
             stages_canvas.move(current_stages[index][2], 0, 4)
@@ -261,7 +289,7 @@ if __name__ == '__main__':
             results[0] = current_stages[0][0].input
         for i in range(0, len(updating_stages)):
             results[i + 1] = updating_stages[i].update(results[i])
-
+            
         set_output(results[-1])
 
     root = ctk.CTk()
@@ -278,7 +306,6 @@ if __name__ == '__main__':
     selected_stage = -1
     defined_stages = [{}, {}, {}]
     current_stages = []
-    results = []
 
     root.iconphoto(False, icon)
     root.geometry(default_size)
@@ -294,6 +321,11 @@ if __name__ == '__main__':
     create_stage(UpperCase, 0)
 
     add_stage(0, 'Input', Input(stage_frame, update_output))
+    add_stage(0, 'UpperCase')
+    add_stage(0, 'UpperCase')
+    add_stage(0, 'UpperCase')
+    add_stage(0, 'UpperCase')
+    add_stage(0, 'UpperCase')
     add_stage(0, 'UpperCase')
     switch_stage(0)
 
