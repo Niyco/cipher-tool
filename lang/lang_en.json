@@ -7,5 +7,6 @@
 	"radio_analysis": "Analysis",
 	"radio_cipher": "Ciphers",
 	"stage_input": "Input",
-	"stage_uppercase": "Upper Case"
+	"stage_uppercase": "Upper Case",
+	"stage_lowercase": "Lower Case"
 }
