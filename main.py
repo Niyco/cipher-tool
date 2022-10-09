@@ -33,7 +33,7 @@ if __name__ == '__main__':
     def resize(event):
         if isinstance(event.widget, ctk.windows.ctk_tk.CTk) and not toolbar_animated:
             if toolbar_active:
-                toolbar.config(height=toolbar_size, width=event.width)
+                toolbar.config(height=72, width=event.width)
             else:
                 toolbar.config(height=0, width=event.width)
         elif isinstance(event.widget, tk.Canvas) and str(event.widget).startswith('.!canvas'):
@@ -45,27 +45,44 @@ if __name__ == '__main__':
                 stages_canvas.coords(stage[1], stages_canvas.winfo_width() // 2, image_y)
     
     def create_widgets():
-        global toolbar, toolbar_active, tooblar_animated, radio_buttons, stages_canvas
+        global toolbar, toolbar_active, tooblar_animated, radio_buttons, stages_canvas, toolbar_canvas
         global stage_frame, stage_output, results, current_stages, stage_positions, selected_stage
 
         toolbar_animated = False
         bg_color = named_to_hex(theme['color']['bg_color'][mode])
         
-        toolbar = ctk.CTkFrame(root)
+        toolbar = ctk.CTkFrame(root, fg_color=bg_color)
         toolbar.grid_propagate(0)
-        radio_text = ctk.CTkButton(toolbar, text=lang['radio_text'], height=26,
-                                   corner_radius=10, command=lambda: radio_select(0),
-                                   fg_color=color_radio_deselected[mode], hover=False)
-        radio_analysis = ctk.CTkButton(toolbar, text=lang['radio_analysis'], height=26,
-                                       corner_radius=10, command=lambda: radio_select(1),
-                                       fg_color=color_radio_deselected[mode], hover=False)
-        radio_cipher = ctk.CTkButton(toolbar, text=lang['radio_cipher'], height=26,
-                                     corner_radius=10, command=lambda: radio_select(2),
-                                     fg_color=color_radio_deselected[mode], hover=False)
-        radio_text.place(x=-10, y=0)
-        radio_analysis.place(x=-10, y=25)
-        radio_cipher.place(x=-10, y=50)
-        radio_buttons = [radio_text, radio_analysis, radio_cipher]
+        toolbar_canvas = tk.Canvas(toolbar, bg=bg_color, highlightthickness=0)
+        toolbar_canvas.grid(row=0, column=0, sticky='NESW')
+        toolbar.columnconfigure(0, weight=1)
+        radio_text_button = ctk.CTkButton(toolbar_canvas, text=lang['radio_text'],
+                                          height=24, image=radio_text_image, compound='right',
+                                          corner_radius=10, command=lambda: radio_select(0),
+                                          fg_color=color_radio_deselected[mode], hover=False)
+        radio_analysis_button = ctk.CTkButton(toolbar_canvas, text=lang['radio_analysis'],
+                                              height=24, image=radio_analysis_image, compound='right',
+                                              corner_radius=10, command=lambda: radio_select(1),
+                                              fg_color=color_radio_deselected[mode], hover=False)
+        radio_cipher_button = ctk.CTkButton(toolbar_canvas, text=lang['radio_cipher'],
+                                            height=24, image=radio_cipher_image, compound='right',
+                                            corner_radius=10, command=lambda: radio_select(2),
+                                            fg_color=color_radio_deselected[mode], hover=False)
+        radio_text_button.place(x=-10, y=0)
+        radio_analysis_button.place(x=-10, y=24)
+        radio_cipher_button.place(x=-10, y=48)
+        radio_buttons = [radio_text_button, radio_analysis_button, radio_cipher_button]
+        toolbar_canvas.create_image(150, 36, image=toolbar_separator_image)
+        toolbar_menu = ctk.CTkFrame(toolbar, fg_color=bg_color)
+        toolbar_menu.grid(row=0, column=1, sticky='NESW')
+        ctk.CTkLabel(toolbar_menu, image=toolbar_separator_image).place(x=-60, y=0)
+        ctk.CTkButton(toolbar_menu, text='', width=30, height=30, corner_radius=15).place(x=16, y=4)
+        ctk.CTkButton(toolbar_menu, text='', width=30, height=30, corner_radius=15).place(x=50, y=4)
+        ctk.CTkButton(toolbar_menu, text='', width=30, height=30, corner_radius=15).place(x=16, y=38)
+        ctk.CTkButton(toolbar_menu, text='', width=30, height=30, corner_radius=15).place(x=50, y=38)
+        ctk.CTkButton(toolbar_menu, text='', width=50, height=50, corner_radius=25).place(x=84, y=12)
+        ctk.CTkButton(toolbar_menu, text='', width=50, height=50, corner_radius=25).place(x=142, y=12)
+        
         stages_canvas = tk.Canvas(root, bg=bg_color, highlightthickness=0, width=200)
         stages_canvas.columnconfigure(0, weight=1)
         stages_canvas.grid(row=2, column=1, sticky='NESW')
@@ -112,6 +129,7 @@ if __name__ == '__main__':
     def update_window():
         global lang, theme, mode, stage_up_image, stage_down_image
         global stage_shown_image, stage_hidden_image, stage_remove_image, toolbar_active
+        global radio_text_image, radio_analysis_image, radio_cipher_image, toolbar_separator_image
         
         lang_file = open(lang_path + '\\' + lang_name + '.json')
         lang = json.load(lang_file)
@@ -129,6 +147,10 @@ if __name__ == '__main__':
         stage_remove_image = tk.PhotoImage(file=path_stage_remove)
         stage_shown_image = tk.PhotoImage(file=path_stage_shown)
         stage_hidden_image = tk.PhotoImage(file=path_stage_hidden)
+        radio_text_image = tk.PhotoImage(file=path_radio_text)
+        radio_analysis_image = tk.PhotoImage(file=path_radio_analysis)
+        radio_cipher_image = tk.PhotoImage(file=path_radio_cipher)
+        toolbar_separator_image = tk.PhotoImage(file=path_toolbar_separator)
         root.title(lang['title'])
 
         ctk.set_appearance_mode(mode_name)
@@ -154,6 +176,7 @@ if __name__ == '__main__':
         global toolbar_animated
 
         toolbar.config(height=start, width=root.winfo_width())
+        root.update()
         if start * (step / abs(step)) < stop:
             toolbar.after(delay, toolbar_animation, toolbar_active, start + step, stop, step, delay)
         else:
@@ -169,12 +192,10 @@ if __name__ == '__main__':
             if toolbar_active:
                 toolbar.grid(row=0, column=0, columnspan=3)
                 toolbar_animated = True
-                toolbar_animation(toolbar_active, 0, toolbar_size, toolbar_step,
-                                  int(toolbar_animation_time / toolbar_size * toolbar_step))
+                toolbar_animation(toolbar_active, 0, 72, toolbar_step, toolbar_delay)
             else:
                 toolbar_animated = True
-                toolbar_animation(toolbar_active, toolbar_size, 0, -toolbar_step,
-                                  int(toolbar_animation_time / toolbar_size * toolbar_step))
+                toolbar_animation(toolbar_active, 72, 0, -toolbar_step, toolbar_delay)
     
     def adjust(color, amount):
         new_hex = '#'
@@ -200,13 +221,27 @@ if __name__ == '__main__':
         stage_output.configure(state='disabled')
 
     def radio_select(button):
-        global radio_selected
-
+        global radio_selected, toolbar_stages
+        bg_color = named_to_hex(theme['color']['bg_color'][mode])
+        
         radio_buttons[radio_selected].configure(fg_color=color_radio_deselected[mode],
                                                 hover_color=color_radio_deselected[mode])
         radio_buttons[button].configure(fg_color=named_to_hex(theme['color']['button'][mode]),
                                         hover_color=named_to_hex(theme['color']['button'][mode]))
         radio_selected = button
+        
+        for stage in toolbar_stages:
+            stage.destroy()
+        toolbar_stages = []
+        for stage in defined_stages[button]:
+            x = 175 + 200 * (len(toolbar_stages) // 2)
+            y = 6 + 33 * (len(toolbar_stages) % 2)
+            toolbar_stage = ctk.CTkButton(toolbar_canvas, text=lang['stage_' + stage.lower()],
+                                          fg_color=bg_color, command=lambda stage=stage: add_stage(0, stage),
+                                          border_color='#848484', height=27, hover=False,
+                                          corner_radius=15, border_width=2)
+            toolbar_stage.place(x=x,y=y)
+            toolbar_stages.append(toolbar_stage)
 
     def create_stage(stage, stage_type):
         name = stage.__name__
@@ -326,7 +361,8 @@ if __name__ == '__main__':
             set_output(results[max(results.keys())])
 
     def remove_result(stage_index, pos_index):
-        del results[stage_index]
+        if stage_index in results:
+            del results[stage_index]
         if pos_index in stage_positions:
             update_output(current_stages[stage_positions[pos_index]][0])
         else:
@@ -391,6 +427,7 @@ if __name__ == '__main__':
     current_stages = []
     stage_positions = {}
     stages_shown = {}
+    toolbar_stages = []
 
     root.iconphoto(False, icon)
     root.geometry(default_size)
@@ -399,18 +436,14 @@ if __name__ == '__main__':
     root.columnconfigure(0, weight=1)
     root.columnconfigure(2, weight=1)
     root.rowconfigure(2, weight=1)
+
+    create_stage(UpperCase, 0)
+    create_stage(LowerCase, 0)
     
     check_queue()
     update_window()
 
-    create_stage(UpperCase, 0)
-    create_stage(LowerCase, 0)
-
     add_stage(0, 'Input', Input(stage_frame, update_output))
-    add_stage(0, 'UpperCase')
-    add_stage(0, 'LowerCase')
-    add_stage(0, 'UpperCase')
-    add_stage(0, 'LowerCase')
     switch_stage(0, unselect=False)
 
     root.mainloop()
