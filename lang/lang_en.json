@@ -3,9 +3,9 @@
 	"stage_content": "Stage options",
 	"stage_list": "Stages",
 	"output": "Output",
-	"radio_text": "Text     ",
-	"radio_analysis": "Analysis ",
-	"radio_cipher": "Ciphers  ",
+	"radio_text": "Text",
+	"radio_analysis": "Analysis",
+	"radio_cipher": "Ciphers",
 	"stage_input": "Input",
 	"stage_uppercase": "Upper Case",
 	"stage_lowercase": "Lower Case"

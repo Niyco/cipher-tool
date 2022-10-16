@@ -3,8 +3,9 @@ if __name__ == '__main__':
     from stages_text import *
     import tkinter as tk
     import customtkinter as ctk
-    import darkdetect
+    import sys
     import multiprocessing
+    import darkdetect
     import json
 
     class Input:
@@ -15,8 +16,7 @@ if __name__ == '__main__':
 
         def setup(self, frame):
             self.input_widget = tk.Text(frame, bd=0, bg=theme['color']['entry'][mode],
-                                        font=(theme['text']['Windows']['font'],
-                                               theme['text']['Windows']['size']),
+                                        font=(theme['text'][os]['font'], font_size),
                                          fg=theme['color']['text'][mode],
                                         insertbackground=theme['color']['text'][mode])
             self.input_widget.insert(1.0, self.input)
@@ -24,7 +24,7 @@ if __name__ == '__main__':
 
         def on_modify(self, event):
             self.input_widget.tk.call(self.input_widget._w, 'edit', 'modified', 0)
-            self.input = self.input_widget.get(1.0, 'end')
+            self.input = self.input_widget.get(1.0, 'end').removesuffix('\n')
             self.update_output(self)
 
         def display(self):
@@ -45,8 +45,9 @@ if __name__ == '__main__':
                 stages_canvas.coords(stage[1], stages_canvas.winfo_width() // 2, image_y)
     
     def create_widgets():
-        global toolbar, toolbar_active, tooblar_animated, radio_buttons, stages_canvas, toolbar_canvas
+        global toolbar, tooblar_animated, radio_buttons, stages_canvas
         global stage_frame, stage_output, results, current_stages, stage_positions, selected_stage
+        global toolbar_canvas, max_result
 
         toolbar_animated = False
         bg_color = named_to_hex(theme['color']['bg_color'][mode])
@@ -56,18 +57,15 @@ if __name__ == '__main__':
         toolbar_canvas = tk.Canvas(toolbar, bg=bg_color, highlightthickness=0)
         toolbar_canvas.grid(row=0, column=0, sticky='NESW')
         toolbar.columnconfigure(0, weight=1)
-        radio_text_button = ctk.CTkButton(toolbar_canvas, text=lang['radio_text'],
-                                          height=24, image=radio_text_image, compound='right',
+        radio_text_button = ctk.CTkButton(toolbar_canvas, text=lang['radio_text'], height=24,
                                           corner_radius=10, command=lambda: radio_select(0),
-                                          fg_color=color_radio_deselected[mode], hover=False)
-        radio_analysis_button = ctk.CTkButton(toolbar_canvas, text=lang['radio_analysis'],
-                                              height=24, image=radio_analysis_image, compound='right',
+                                          fg_color=color_deselected[mode], hover=False)
+        radio_analysis_button = ctk.CTkButton(toolbar_canvas, text=lang['radio_analysis'], height=24,
                                               corner_radius=10, command=lambda: radio_select(1),
-                                              fg_color=color_radio_deselected[mode], hover=False)
-        radio_cipher_button = ctk.CTkButton(toolbar_canvas, text=lang['radio_cipher'],
-                                            height=24, image=radio_cipher_image, compound='right',
+                                              fg_color=color_deselected[mode], hover=False)
+        radio_cipher_button = ctk.CTkButton(toolbar_canvas, text=lang['radio_cipher'], height=24,
                                             corner_radius=10, command=lambda: radio_select(2),
-                                            fg_color=color_radio_deselected[mode], hover=False)
+                                            fg_color=color_deselected[mode], hover=False)
         radio_text_button.place(x=-10, y=0)
         radio_analysis_button.place(x=-10, y=24)
         radio_cipher_button.place(x=-10, y=48)
@@ -75,13 +73,25 @@ if __name__ == '__main__':
         toolbar_canvas.create_image(150, 36, image=toolbar_separator_image)
         toolbar_menu = ctk.CTkFrame(toolbar, fg_color=bg_color)
         toolbar_menu.grid(row=0, column=1, sticky='NESW')
-        ctk.CTkLabel(toolbar_menu, image=toolbar_separator_image).place(x=-60, y=0)
-        ctk.CTkButton(toolbar_menu, text='', width=30, height=30, corner_radius=15).place(x=16, y=4)
-        ctk.CTkButton(toolbar_menu, text='', width=30, height=30, corner_radius=15).place(x=50, y=4)
-        ctk.CTkButton(toolbar_menu, text='', width=30, height=30, corner_radius=15).place(x=16, y=38)
-        ctk.CTkButton(toolbar_menu, text='', width=30, height=30, corner_radius=15).place(x=50, y=38)
-        ctk.CTkButton(toolbar_menu, text='', width=50, height=50, corner_radius=25).place(x=84, y=12)
-        ctk.CTkButton(toolbar_menu, text='', width=50, height=50, corner_radius=25).place(x=142, y=12)
+        ctk.CTkLabel(toolbar_menu, image=toolbar_separator_image).place(x=-68, y=0)
+        ctk.CTkButton(toolbar_menu, text='', width=30, height=30, image=toolbar_copy_image,
+                      fg_color=color_deselected[mode], hover_color=theme['color']['button'][mode],
+                      corner_radius=15, command=copy_output).place(x=20, y=4)
+        ctk.CTkButton(toolbar_menu, text='', width=30, height=30, image=toolbar_clear_image,
+                      fg_color=color_deselected[mode], hover_color=theme['color']['button'][mode],
+                      corner_radius=15, command=clear_stages).place(x=54, y=4)
+        ctk.CTkButton(toolbar_menu, text='', width=30, height=30, image=toolbar_increase_image,
+                      fg_color=color_deselected[mode], hover_color=theme['color']['button'][mode],
+                      corner_radius=15, command=lambda: change_font_size(2)).place(x=20, y=38)
+        ctk.CTkButton(toolbar_menu, text='', width=30, height=30, image=toolbar_decrease_image,
+                      fg_color=color_deselected[mode], hover_color=theme['color']['button'][mode],
+                      corner_radius=15, command=lambda: change_font_size(-2)).place(x=54, y=38)
+        ctk.CTkButton(toolbar_menu, text='', width=44, height=44, image=toolbar_theme_image,
+                      fg_color=color_deselected[mode], hover_color=theme['color']['button'][mode],
+                      corner_radius=22, command=swap_theme).place(x=92, y=14)
+        ctk.CTkButton(toolbar_menu, text='', width=44, height=44, image=toolbar_options_image,
+                      fg_color=color_deselected[mode], hover_color=theme['color']['button'][mode],
+                      corner_radius=22).place(x=144, y=14)
         
         stages_canvas = tk.Canvas(root, bg=bg_color, highlightthickness=0, width=200)
         stages_canvas.columnconfigure(0, weight=1)
@@ -99,8 +109,7 @@ if __name__ == '__main__':
         output_frame.grid_propagate(0)
         stage_output = tk.Text(output_frame, bd=0, state='disabled',
                                bg=theme['color']['entry'][mode],
-                               font=(theme['text']['Windows']['font'],
-                                     theme['text']['Windows']['size']),
+                               font=(theme['text'][os]['font'], font_size),
                                fg=theme['color']['text'][mode],
                                insertbackground=theme['color']['text'][mode])
         stage_output.grid(padx=8, pady=8, sticky='NESW')
@@ -114,6 +123,7 @@ if __name__ == '__main__':
         ctk.CTkLabel(root, text=lang['output']).grid(row=1, column=2)
         
         results = {}
+        max_result = ''
         old_current_stages = current_stages.copy()
         old_stage_positions = stage_positions.copy()
         current_stages = []
@@ -127,9 +137,10 @@ if __name__ == '__main__':
             switch_stage(index, unselect=False)
 
     def update_window():
-        global lang, theme, mode, stage_up_image, stage_down_image
-        global stage_shown_image, stage_hidden_image, stage_remove_image, toolbar_active
-        global radio_text_image, radio_analysis_image, radio_cipher_image, toolbar_separator_image
+        global lang, theme, mode, stage_up_image, stage_down_image, stage_shown_image, os
+        global stage_hidden_image, stage_remove_image, toolbar_active, toolbar_separator_image
+        global toolbar_increase_image, toolbar_decrease_image, toolbar_copy_image, toolbar_clear_image
+        global toolbar_theme_image, toolbar_stage_image, toolbar_options_image, font_size
         
         lang_file = open(lang_path + '\\' + lang_name + '.json')
         lang = json.load(lang_file)
@@ -137,20 +148,28 @@ if __name__ == '__main__':
         theme_file = open(theme_path + '\\' + theme_name + '.json')
         theme = json.load(theme_file)
         theme_file.close()
-        
+
+        if sys.platform.startswith('darwin'): os = 'macOS'
+        elif sys.platform.startswith('win'): os = 'Windows'
+        elif sys.platform.startswith('linux'): os = 'Linux'
         if mode_name == 'light': mode = 0
         elif mode_name == 'dark': mode = 1
         else: mode = modes.index(darkdetect.theme().lower())
+        if not font_size: font_size = theme['text'][os]['size']
             
         stage_up_image = tk.PhotoImage(file=path_stage_up[mode])
         stage_down_image = tk.PhotoImage(file=path_stage_down[theme_name][mode])
         stage_remove_image = tk.PhotoImage(file=path_stage_remove)
         stage_shown_image = tk.PhotoImage(file=path_stage_shown)
         stage_hidden_image = tk.PhotoImage(file=path_stage_hidden)
-        radio_text_image = tk.PhotoImage(file=path_radio_text)
-        radio_analysis_image = tk.PhotoImage(file=path_radio_analysis)
-        radio_cipher_image = tk.PhotoImage(file=path_radio_cipher)
         toolbar_separator_image = tk.PhotoImage(file=path_toolbar_separator)
+        toolbar_stage_image = tk.PhotoImage(file=path_toolbar_stage[mode])
+        toolbar_increase_image = tk.PhotoImage(file=path_toolbar_increase[mode])
+        toolbar_decrease_image = tk.PhotoImage(file=path_toolbar_decrease[mode])
+        toolbar_copy_image = tk.PhotoImage(file=path_toolbar_copy[mode])
+        toolbar_clear_image = tk.PhotoImage(file=path_toolbar_clear[mode])
+        toolbar_theme_image = tk.PhotoImage(file=path_toolbar_theme[mode])
+        toolbar_options_image = tk.PhotoImage(file=path_toolbar_options[mode])
         root.title(lang['title'])
 
         ctk.set_appearance_mode(mode_name)
@@ -167,7 +186,8 @@ if __name__ == '__main__':
     def check_queue():
         try:
             queue.get(False)
-            update_window()
+            if mode_name == 'default':
+                update_window()
         except:
             pass
         root.after(check_queue_delay, check_queue)
@@ -224,38 +244,44 @@ if __name__ == '__main__':
         global radio_selected, toolbar_stages
         bg_color = named_to_hex(theme['color']['bg_color'][mode])
         
-        radio_buttons[radio_selected].configure(fg_color=color_radio_deselected[mode],
-                                                hover_color=color_radio_deselected[mode])
+        radio_buttons[radio_selected].configure(fg_color=color_deselected[mode],
+                                                hover_color=color_deselected[mode])
         radio_buttons[button].configure(fg_color=named_to_hex(theme['color']['button'][mode]),
                                         hover_color=named_to_hex(theme['color']['button'][mode]))
         radio_selected = button
         
         for stage in toolbar_stages:
-            stage.destroy()
+            toolbar_canvas.delete(stage[0])
+            toolbar_canvas.delete(stage[1])
         toolbar_stages = []
         for stage in defined_stages[button]:
-            x = 175 + 200 * (len(toolbar_stages) // 2)
-            y = 6 + 33 * (len(toolbar_stages) % 2)
-            toolbar_stage = ctk.CTkButton(toolbar_canvas, text=lang['stage_' + stage.lower()],
-                                          fg_color=bg_color, command=lambda stage=stage: add_stage(0, stage),
-                                          border_color='#848484', height=27, hover=False,
-                                          corner_radius=15, border_width=2)
-            toolbar_stage.place(x=x,y=y)
-            toolbar_stages.append(toolbar_stage)
+            x = 245 + 170 * (len(toolbar_stages) // 2)
+            y = 17 + 38 * (len(toolbar_stages) % 2)
+            
+            image = toolbar_canvas.create_image(x, y, image=toolbar_stage_image)
+            text = toolbar_canvas.create_text(x, y - 4, text=lang['stage_' + stage.lower()],
+                                         font=(theme['text'][os]['font'],
+                                               theme['text'][os]['size'] + 2),
+                                         fill=theme['color']['text'][mode])
+            toolbar_canvas.tag_bind(image, '<Button-1>', lambda event, stage=stage: add_stage(0, stage))
+            toolbar_canvas.tag_bind(text, '<Button-1>', lambda event, stage=stage: add_stage(0, stage))
+            toolbar_stages.append((image, text))
 
     def create_stage(stage, stage_type):
         name = stage.__name__
         defined_stages[stage_type][name] = stage
 
     def add_stage(stage_type, name, stage=None):
+        global max_result
+        
         length = len(stage_positions.keys())
         display_name = lang['stage_' + name.lower()]
         bg_color = named_to_hex(theme['color']['bg_color'][mode])
         y = (stage_up_image.height() + stage_spaceing) * (length + 1)
         image = stages_canvas.create_image(0, y, image=stage_up_image)
         text = stages_canvas.create_text(0, y - 4, text=display_name,
-                                         font=(theme['text']['Windows']['font'],
-                                               theme['text']['Windows']['size'] + 2),
+                                         font=(theme['text'][os]['font'],
+                                               theme['text'][os]['size'] + 2),
                                          fill=theme['color']['text'][mode])
 
         if stage:
@@ -309,7 +335,8 @@ if __name__ == '__main__':
             else:
                 current_stages.append((stage, image, text, remove, toggle_show))
                 
-        set_output(results[max(results.keys())])
+        max_result = results[max(results.keys())]
+        set_output(max_result)
 
     def remove_stage(stage_index):
         stage = current_stages[stage_index]
@@ -361,12 +388,15 @@ if __name__ == '__main__':
             set_output(results[max(results.keys())])
 
     def remove_result(stage_index, pos_index):
+        global max_result
+        
         if stage_index in results:
             del results[stage_index]
         if pos_index in stage_positions:
             update_output(current_stages[stage_positions[pos_index]][0])
         else:
-            set_output(results[max(results.keys())])
+            max_result = results[max(results.keys())]
+            set_output(max_result)
 
     def switch_stage(index, unselect=True):
         global selected_stage
@@ -388,6 +418,8 @@ if __name__ == '__main__':
             stages_canvas.focus_set()
 
     def update_output(stage):
+        global max_result
+        
         start_stage_index = [i for i, v in enumerate(current_stages) if v and v[0] is stage][0]
         start_pos_index =  next(k for k, v in stage_positions.items() if v == start_stage_index)
         updating_stages = []
@@ -409,7 +441,34 @@ if __name__ == '__main__':
         for i, v in enumerate(updating_stages[1:]):
             results[v] = current_stages[v][0].update(results[updating_stages[i]])
 
-        set_output(results[max(results.keys())])
+        max_result = results[max(results.keys())]
+        set_output(max_result)
+
+    def copy_output():
+        root.clipboard_clear()
+        root.clipboard_append(max_result)
+        root.update()
+
+    def clear_stages():
+        for i, v in enumerate(current_stages[1:]):
+            if v:
+                remove_stage(i + 1)
+
+    def change_font_size(amount):
+        global font_size
+
+        font_size = max(min(font_size - amount, -9), -21)
+        current_stages[0][0].input_widget.configure(font=(theme['text'][os]['font'], font_size))
+        stage_output.configure(font=(theme['text'][os]['font'], font_size))
+
+    def swap_theme():
+        global mode_name
+
+        if not toolbar_animated:
+            if mode == 0: mode_name = 'dark'
+            elif mode == 1: mode_name = 'light'
+
+            update_window()
 
     root = ctk.CTk()
     icon = tk.PhotoImage(file=path_window_icon)
@@ -421,6 +480,7 @@ if __name__ == '__main__':
     toolbar_active = False
     toolbar_animated = False
     modes = ['light', 'dark']
+    font_size = 0
     radio_selected = 0
     selected_stage = 0
     defined_stages = [{}, {}, {}]
