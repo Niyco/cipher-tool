@@ -243,6 +243,11 @@ class CTkButton(CTkBaseClass):
             else:
                 self.text_label.configure(text=self.text)
 
+        if "text_font" in kwargs:
+            self.text_font = kwargs.pop("text_font")
+            if self.text_label is not None:
+                self.text_label.configure(font=self.apply_font_scaling(self.text_font))
+
         if "state" in kwargs:
             self.state = kwargs.pop("state")
             self.set_cursor()
@@ -362,7 +367,7 @@ class CTkButton(CTkBaseClass):
 
     def clicked(self, event=None):
         if self.command is not None:
-            if self.state is not tkinter.DISABLED:
+            if self.state != tkinter.DISABLED:
 
                 # click animation: change color with .on_leave() and back to normal after 100ms with click_animation()
                 self.on_leave()

@@ -57,6 +57,7 @@ class CTkTextbox(CTkBaseClass):
                                     height=0,
                                     font=self.text_font,
                                     highlightthickness=0,
+                                    relief="flat",
                                     insertbackground=ThemeManager.single_color(("black", "white"), self._appearance_mode),
                                     bg=ThemeManager.single_color(self.fg_color, self._appearance_mode),
                                     **kwargs)
@@ -159,6 +160,13 @@ class CTkTextbox(CTkBaseClass):
 
         if "height" in kwargs:
             self.set_dimensions(height=kwargs.pop("height"))
+
+        if "text_font" in kwargs:
+            self.text_font = kwargs.pop("text_font")
+            self.textbox.configure(font=self.apply_font_scaling(self.text_font))
+
+        if "font" in kwargs:
+            raise ValueError("No attribute named font. Use text_font instead of font for CTk widgets")
 
         if "bg_color" in kwargs:
             super().configure(bg_color=kwargs.pop("bg_color"), require_redraw=require_redraw)
