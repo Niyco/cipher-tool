@@ -43,13 +43,15 @@ if __name__ == '__main__':
             stage_scroll(None)
     
     def create_widgets():
-        global toolbar, tooblar_animated, radio_buttons, stages_canvas
-        global stage_frame, stage_output, results, current_stages, stage_positions, selected_stage
-        global toolbar_canvas, toolbar_stages_pos, max_result, stages_pos
+        global toolbar, tooblar_animated, radio_buttons, stages_canvas, stage_frame, stage_output
+        global results, current_stages, stage_positions, selected_stage, toolbar_canvas, max_result
+        global toolbar_stages_pos, stages_pos, dragged_stage
 
         toolbar_animated = False
         toolbar_stages_pos = 0
         stages_pos = 0
+        dragged_stage = -1
+        
         bg_color = named_to_hex(theme['color']['bg_color'][mode])
         
         toolbar = ctk.CTkFrame(root, fg_color=bg_color)
@@ -352,8 +354,12 @@ if __name__ == '__main__':
         if not stage_index in stages_shown:
             stages_shown[stage_index] = True
 
-        stages_canvas.tag_bind(image, '<Button-1>', lambda event: switch_stage(stage_index))
-        stages_canvas.tag_bind(text, '<Button-1>', lambda event: switch_stage(stage_index))
+        stages_canvas.tag_bind(image, '<ButtonPress-1>', lambda event: stage_mb_down(event, stage_index))
+        stages_canvas.tag_bind(text, '<ButtonPress-1>', lambda event: stage_mb_down(event, stage_index))
+        stages_canvas.tag_bind(image, '<ButtonRelease-1>', stage_mb_up)
+        stages_canvas.tag_bind(text, '<ButtonRelease-1>', stage_mb_up)
+        stages_canvas.tag_bind(image, '<Motion>', stage_mouse_move)
+        stages_canvas.tag_bind(text, '<Motion>', stage_mouse_move)
         if name != 'Input':
             remove = ctk.CTkButton(stages_canvas, text='', image=stage_remove_image,
                    width=21, height=21, fg_color=bg_color,
@@ -438,8 +444,9 @@ if __name__ == '__main__':
             stage[3].place(x=stage_up_image.width() + 25, y=y - 9)
             stage[4].place(x=2, y=y - 9)
 
-            stage_positions[i + amount] = stage_positions[i]
-            del stage_positions[i]
+            if amount != 0:
+                stage_positions[i + amount] = stage_positions[i]
+                del stage_positions[i]
 
     def toggle_hidden(stage_index):
         stage = current_stages[stage_index]
@@ -483,6 +490,62 @@ if __name__ == '__main__':
                 widget.grid_forget()
             selected[0].display()
             stages_canvas.focus_set()
+
+    def stage_mouse_move(event):
+        global dragged_end
+        global dragging
+
+        if dragging:
+            stage = current_stages[dragged_stage]
+            x = stages_canvas.coords(stage[1])[0]
+
+            stage[3].place(x=stage_up_image.width() + 25, y=event.y - 9)
+            stage[4].place(x=2, y=event.y - 9)
+            stages_canvas.coords(stage[1], x, event.y)
+            if dragged_stage == selected_stage:
+                stages_canvas.coords(stage[2], x, event.y)
+            else:
+                stages_canvas.coords(stage[2], x, event.y - 4)
+
+            pos_index = next(k for k, v in stage_positions.items() if v == dragged_stage)
+            stage_y = (stage_up_image.height() + stage_spaceing) * pos_index + stage_up_image.height() // 2 - stages_pos
+            difference = event.y - stage_y
+            if difference != 0:
+                direction = int(difference / abs(difference))
+                move_stage = pos_index + direction
+                
+                if abs(difference) > stage_up_image.height() // 2 + stage_spaceing and move_stage != 0 and move_stage < len(stage_positions):
+                    move_stages(move_stage, move_stage, 0 - direction)
+                    stage_positions[pos_index + direction] = dragged_stage
+            
+        elif dragged_stage > 0:
+            dragged_end = (event.x, event.y)
+            movement = max(abs(dragged_start[0] - dragged_end[0]), abs(dragged_start[1] - dragged_end[1]))
+            if movement > stages_drag_max:
+                dragging = True
+    
+    def stage_mb_down(event, index):
+        global dragged_stage
+        global dragged_start
+        global dragged_end
+        
+        dragged_stage = index
+        dragged_start = (event.x, event.y)
+        dragged_end = (event.x, event.y)
+
+    def stage_mb_up(event):
+        global dragged_stage
+        global dragging
+        
+        movement = max(abs(dragged_start[0] - dragged_end[0]), abs(dragged_start[1] - dragged_end[1]))
+        if dragging:
+            pos_index = next(k for k, v in stage_positions.items() if v == dragged_stage)
+            move_stages(pos_index, pos_index, 0)
+            dragging = False
+            dragged_stage = -1
+        elif dragged_stage > -1 and movement <= stages_drag_max:
+            switch_stage(dragged_stage)
+            dragged_stage = -1
 
     def update_output(stage):
         global max_result
@@ -550,6 +613,9 @@ if __name__ == '__main__':
     font_size = 0
     toolbar_stages_last = 0
     stages_last = 0
+    dragging = False
+    dragged_start = (0, 0)
+    dragged_end = (0, 0)
     radio_selected = 0
     selected_stage = 0
     defined_stages = [{}, {}, {}]
