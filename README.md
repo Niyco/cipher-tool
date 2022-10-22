@@ -4,7 +4,7 @@ A python program containing tools for encrypting and decrypting classical cipher
 ## Ciphers supported:
 * None
 ## Analysis tools:
-* None
+* Length
 ## Text manipulation tools:
 * Uppercase
 * Lowercase
