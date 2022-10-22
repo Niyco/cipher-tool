@@ -28,7 +28,7 @@ hover_color_change_stage = -8
 toolbar_step = 8
 toolbar_delay = 0
 stage_spaceing = 4
-stages_drag_max = 10
+stages_drag_max = 8
 
 mode_name = 'default'
 theme_name = 'green'

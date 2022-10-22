@@ -1,6 +1,7 @@
 if __name__ == '__main__':
     from constants import *
     from stages_text import *
+    from stages_analysis import *
     import tkinter as tk
     import customtkinter as ctk
     import sys
@@ -272,8 +273,8 @@ if __name__ == '__main__':
                                          font=(theme['text'][os]['font'],
                                                theme['text'][os]['size'] + 2),
                                          fill=theme['color']['text'][mode])
-            toolbar_canvas.tag_bind(image, '<Button-1>', lambda event, stage=stage: add_stage(0, stage))
-            toolbar_canvas.tag_bind(text, '<Button-1>', lambda event, stage=stage: add_stage(0, stage))
+            toolbar_canvas.tag_bind(image, '<Button-1>', lambda event, stage=stage: add_stage(button, stage))
+            toolbar_canvas.tag_bind(text, '<Button-1>', lambda event, stage=stage: add_stage(button, stage))
             toolbar_stages.append((image, text))
 
         toolbar_stages_last = x + 75
@@ -340,6 +341,7 @@ if __name__ == '__main__':
             stage.setup(stage_frame)
         else:
             stage = defined_stages[stage_type][name](stage_frame, update_output)
+            stage.setup(stage_frame)
 
         for i, v in enumerate(current_stages):
             if not v:
@@ -385,14 +387,16 @@ if __name__ == '__main__':
             else:
                 current_stages.append((stage, image, text))
         else:
-            results[stage_index] = stage.update(results[max(results.keys())])
+            if stage_type != 1:
+                results[stage_index] = stage.update(results[max(results.keys())])
             if replace:
-                current_stages[stage_index] = (stage, image, text, remove, toggle_show)
+                current_stages[stage_index] = [stage, image, text, remove, toggle_show]
             else:
-                current_stages.append((stage, image, text, remove, toggle_show))
-                
-        max_result = results[max(results.keys())]
-        set_output(max_result)
+                current_stages.append([stage, image, text, remove, toggle_show])
+
+        if stage_type != 1:
+            max_result = results[stage_index]
+            set_output(max_result)
         root.update()
         for stage in stage_positions.values():
             stage = current_stages[stage]
@@ -469,7 +473,7 @@ if __name__ == '__main__':
         if pos_index in stage_positions:
             update_output(current_stages[stage_positions[pos_index]][0])
         else:
-            max_result = results[max(results.keys())]
+            max_result = results[next(v for k, v in reversed(stage_positions.items()) if v in results)]
             set_output(max_result)
 
     def switch_stage(index, unselect=True):
@@ -494,6 +498,8 @@ if __name__ == '__main__':
     def stage_mouse_move(event):
         global dragged_end
         global dragging
+        global dragged_stage_pos_start
+        global stage_positions
 
         if dragging:
             stage = current_stages[dragged_stage]
@@ -508,20 +514,29 @@ if __name__ == '__main__':
                 stages_canvas.coords(stage[2], x, event.y - 4)
 
             pos_index = next(k for k, v in stage_positions.items() if v == dragged_stage)
-            stage_y = (stage_up_image.height() + stage_spaceing) * pos_index + stage_up_image.height() // 2 - stages_pos
-            difference = event.y - stage_y
+            y = (stage_up_image.height() + stage_spaceing) * pos_index + stage_up_image.height() // 2 - stages_pos
+            difference = event.y - y
             if difference != 0:
                 direction = int(difference / abs(difference))
                 move_stage = pos_index + direction
                 
-                if abs(difference) > stage_up_image.height() // 2 + stage_spaceing and move_stage != 0 and move_stage < len(stage_positions):
+                if (abs(difference) > stage_up_image.height() // 2 + stage_spaceing and
+                    move_stage != 0 and move_stage < len(stage_positions)):
                     move_stages(move_stage, move_stage, 0 - direction)
                     stage_positions[pos_index + direction] = dragged_stage
+                    stage_positions = dict(sorted(stage_positions.items()))
             
         elif dragged_stage > 0:
             dragged_end = (event.x, event.y)
             movement = max(abs(dragged_start[0] - dragged_end[0]), abs(dragged_start[1] - dragged_end[1]))
             if movement > stages_drag_max:
+                stage = current_stages[dragged_stage]
+                stages_canvas.tag_raise(stage[1])
+                stages_canvas.tag_raise(stage[2])
+                items = stages_canvas.find_all()
+                stage[2] = items[-1]
+                stage[1] = items[-2]
+                dragged_stage_pos_start = next(k for k, v in stage_positions.items() if v == dragged_stage)
                 dragging = True
     
     def stage_mb_down(event, index):
@@ -536,13 +551,16 @@ if __name__ == '__main__':
     def stage_mb_up(event):
         global dragged_stage
         global dragging
+        global dragged_stage_pos_start
         
         movement = max(abs(dragged_start[0] - dragged_end[0]), abs(dragged_start[1] - dragged_end[1]))
         if dragging:
             pos_index = next(k for k, v in stage_positions.items() if v == dragged_stage)
+            update_output(current_stages[stage_positions[min(pos_index, dragged_stage_pos_start)]][0])
             move_stages(pos_index, pos_index, 0)
             dragging = False
             dragged_stage = -1
+            
         elif dragged_stage > -1 and movement <= stages_drag_max:
             switch_stage(dragged_stage)
             dragged_stage = -1
@@ -551,27 +569,39 @@ if __name__ == '__main__':
         global max_result
         
         start_stage_index = [i for i, v in enumerate(current_stages) if v and v[0] is stage][0]
-        start_pos_index =  next(k for k, v in stage_positions.items() if v == start_stage_index)
+        start_pos_index = next(k for k, v in stage_positions.items() if v == start_stage_index)
         updating_stages = []
         for i in range(start_pos_index, len(stage_positions)):
             stage_index = stage_positions[i]
             x = current_stages[stage_index]
             for y in defined_stages[0]:
                 if isinstance(x[0], defined_stages[0][y]) and stages_shown[stage_index]:
-                    updating_stages.append(stage_index)
-                    
-            for y in defined_stages[2]:
-                if isinstance(x[0], defined_stages[0][y]) and stages_shown[stage_index]:
-                    updating_stages.append(stage_index)
-
+                    updating_stages.append((stage_index, True))
+                    break
+            else:
+                for y in defined_stages[1]:
+                    if isinstance(x[0], defined_stages[1][y]) and stages_shown[stage_index]:
+                        updating_stages.append((stage_index, False))
+                        break
+                else:
+                    for y in defined_stages[2]:
+                        if isinstance(x[0], defined_stages[2][y]) and stages_shown[stage_index]:
+                            updating_stages.append((stage_index, True))
         if start_pos_index == 0:
             results[0] = current_stages[0][0].input
         if updating_stages:
-            updating_stages.insert(0, [x for x in results.keys() if x < updating_stages[0]][-1])
+            search_item = updating_stages[0][0]
+            to_search = list(stage_positions.values())
+            to_search = to_search[:to_search.index(search_item)]
+            updating_stages.insert(0, ([x for x in to_search if x < search_item and x in results][-1], True))
         for i, v in enumerate(updating_stages[1:]):
-            results[v] = current_stages[v][0].update(results[updating_stages[i]])
+            if v[1]:
+                results[v[0]] = current_stages[v[0]][0].update(results[updating_stages[i][0]])
+            else:
+                current_stages[v[0]][0].update(results[updating_stages[i][0]])
+                i -= 1
 
-        max_result = results[max(results.keys())]
+        max_result = max_result = results[next(v for k, v in reversed(stage_positions.items()) if v in results)]
         set_output(max_result)
 
     def copy_output():
@@ -606,6 +636,7 @@ if __name__ == '__main__':
     toolbar_toggle_image = tk.PhotoImage(file=path_toolbar_icon)
     queue = multiprocessing.Queue()
     x = multiprocessing.Process(target=darkdetect.listener, args=(queue.put,))
+    x.daemon = True
     x.start()
     toolbar_active = False
     toolbar_animated = False
@@ -616,6 +647,7 @@ if __name__ == '__main__':
     dragging = False
     dragged_start = (0, 0)
     dragged_end = (0, 0)
+    dragged_stage_pos_start = 0
     radio_selected = 0
     selected_stage = 0
     defined_stages = [{}, {}, {}]
@@ -635,6 +667,8 @@ if __name__ == '__main__':
 
     create_stage(UpperCase, 0)
     create_stage(LowerCase, 0)
+
+    create_stage(Length, 1)
     
     check_queue()
     update_window()
