@@ -8,9 +8,13 @@ toolbar_updates = 0
 toolbar_delay = 12
 stages_drag_max = 8
 loading_delay = 50
+threaded = True
 mode_name = 'default'
 theme_name = 'green'
 lang_name = 'lang_en'
+
+alphabet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q',
+            'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
 
 class Stage:
     def __init__(self, update_output):

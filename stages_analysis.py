@@ -1,7 +1,6 @@
 from constants import *
 import tkinter as tk
 import customtkinter as ctk
-import time
 
 class Length(Stage):
     def setup(self, frame):
@@ -19,4 +18,6 @@ class Length(Stage):
         self.length_var.set(length)
     
     def display(self):
+        self.frame.columnconfigure(0, weight=1)
+        self.frame.rowconfigure(0, weight=1)
         self.length_widget.grid(row=0, column=0)

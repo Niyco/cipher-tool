@@ -9,5 +9,8 @@
 	"stage_input": "Input",
 	"stage_uppercase": "Upper Case",
 	"stage_lowercase": "Lower Case",
-	"stage_length": "Length"
+	"stage_length": "Length",
+	"stage_reverse": "Reverse",
+	"stage_strip": "Strip Text",
+	"stage_block": "Block Text"
 }

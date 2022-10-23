@@ -124,8 +124,6 @@ if __name__ == '__main__':
         stages_canvas.create_rectangle(196, 0, 196, 0, outline=theme['color']['deselected'][mode])
         stage_frame = ctk.CTkFrame(root, fg_color=named_to_hex(theme['color']['entry'][mode]))
         stage_frame.grid(row=2, column=0, rowspan=2, sticky='NESW')
-        stage_frame.columnconfigure(0, weight=1)
-        stage_frame.rowconfigure(0, weight=1)
         stage_frame.grid_propagate(0)
         loading_animation_label = ctk.CTkLabel(stage_frame)
         output_frame = ctk.CTkFrame(root, fg_color=named_to_hex(theme['color']['entry'][mode]))
@@ -418,7 +416,10 @@ if __name__ == '__main__':
                 current_stages.append((stage, image, text))
         else:
             if stage_type != 1 and update:
-                returns = threaded_update([max_result, (stage.update, stage.update_vars, False)])
+                if threaded:
+                    returns = threaded_update([max_result, (stage.update, stage.update_vars, False)])
+                else:
+                    returns = unthreaded_update([max_result, (stage.update, stage.update_vars, False)])
                 results[stage_index] = returns[0][0]
                 stage.update_widgets(*returns[0][1])
             if replace:
@@ -506,7 +507,7 @@ if __name__ == '__main__':
             set_output(max_result)
 
     def switch_stage(index, unselect=True):
-        global selected_stage
+        global selected_stage, stage_frame
 
         selected = current_stages[index]
         
@@ -521,6 +522,9 @@ if __name__ == '__main__':
 
             for widget in stage_frame.winfo_children():
                 widget.grid_forget()
+            for i in range(0, 10):
+                stage_frame.rowconfigure(i, weight=0)
+                stage_frame.columnconfigure(i, weight=0)
             selected[0].display()
             stages_canvas.focus_set()
 
@@ -631,7 +635,10 @@ if __name__ == '__main__':
                 if v[1]: analysis = False
                 else: analysis = True
                 updates.append((function, args, analysis))
-            returns = threaded_update(updates)
+            if threaded:
+                returns = threaded_update(updates)
+            else:
+                returns = unthreaded_update(updates)
             for i, v in enumerate(updating_stages[1:]):
                 if v[1]:
                     results[v[0]] = returns[i][0]
@@ -646,7 +653,7 @@ if __name__ == '__main__':
         global loading
 
         loading = True
-        root.after(200, start_loading_animation, 0, True)
+        root.after(400, start_loading_animation, 0, True)
         update_queue_in.put(updates)
         while True:
             if update_queue_out.empty():
@@ -658,6 +665,17 @@ if __name__ == '__main__':
                 break
         loading = False
         
+        return returns
+
+    def unthreaded_update(updates):
+        text = updates.pop(0)
+        returns = []
+        for update in updates:
+            function, args, analysis = update
+            result = function(text, *args)
+            returns.append(result)
+            if not analysis: text = result[0]
+
         return returns
 
     def start_loading_animation(frame, start=False):
@@ -708,15 +726,16 @@ if __name__ == '__main__':
             update_window()
 
     root = ctk.CTk()
-    darkdetect_queue = multiprocessing.Queue()
-    x = multiprocessing.Process(target=darkdetect.listener, args=(darkdetect_queue.put,))
-    x.daemon = True
-    x.start()
-    update_queue_in = multiprocessing.Queue()
-    update_queue_out = multiprocessing.Queue()
-    y = multiprocessing.Process(target=output_thread, args=(update_queue_in, update_queue_out))
-    y.daemon = True
-    y.start()
+    if threaded:
+        darkdetect_queue = multiprocessing.Queue()
+        x = multiprocessing.Process(target=darkdetect.listener, args=(darkdetect_queue.put,))
+        x.daemon = True
+        x.start()
+        update_queue_in = multiprocessing.Queue()
+        update_queue_out = multiprocessing.Queue()
+        y = multiprocessing.Process(target=output_thread, args=(update_queue_in, update_queue_out))
+        y.daemon = True
+        y.start()
     toolbar_active = False
     toolbar_animated = False
     modes = ['light', 'dark']
@@ -745,6 +764,9 @@ if __name__ == '__main__':
 
     create_stage(UpperCase, 0)
     create_stage(LowerCase, 0)
+    create_stage(Reverse, 0)
+    create_stage(Strip, 0)
+    create_stage(Block, 0)
 
     create_stage(Length, 1)
     
