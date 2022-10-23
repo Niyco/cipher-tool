@@ -8,3 +8,6 @@ A python program containing tools for encrypting and decrypting classical cipher
 ## Text manipulation tools:
 * Uppercase
 * Lowercase
+* Reverse
+* Strip Text
+* Block Text
