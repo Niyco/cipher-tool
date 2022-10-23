@@ -6,6 +6,7 @@ class Length(Stage):
     def setup(self, frame):
         super().setup(frame)
         self.length_var = tk.StringVar()
+        self.length_var.set('0')
         self.length_widget = ctk.CTkLabel(self.frame, textvariable=self.length_var)
 
     @staticmethod
