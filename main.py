@@ -297,8 +297,10 @@ if __name__ == '__main__':
                                          font=(theme['text'][os]['font'],
                                                theme['text'][os]['size'] + 2),
                                          fill=theme['color']['text'][mode])
-            toolbar_canvas.tag_bind(image, '<Button-1>', lambda event, stage=stage: add_stage(button, stage))
-            toolbar_canvas.tag_bind(text, '<Button-1>', lambda event, stage=stage: add_stage(button, stage))
+            for item in [image, text]:
+                toolbar_canvas.tag_bind(item, '<Button-1>', lambda event, stage=stage: add_stage(button, stage))
+                toolbar_canvas.tag_bind(item, '<Enter>', lambda event: toolbar_canvas.config(cursor='hand2'))
+                toolbar_canvas.tag_bind(item, '<Leave>', lambda event: toolbar_canvas.config(cursor=''))
             toolbar_stages.append((image, text))
 
         toolbar_stages_last = x + 75
@@ -380,12 +382,13 @@ if __name__ == '__main__':
         if not stage_index in stages_shown:
             stages_shown[stage_index] = True
 
-        stages_canvas.tag_bind(image, '<ButtonPress-1>', lambda event: stage_mb_down(event, stage_index))
-        stages_canvas.tag_bind(text, '<ButtonPress-1>', lambda event: stage_mb_down(event, stage_index))
-        stages_canvas.tag_bind(image, '<ButtonRelease-1>', stage_mb_up)
-        stages_canvas.tag_bind(text, '<ButtonRelease-1>', stage_mb_up)
-        stages_canvas.tag_bind(image, '<Motion>', stage_mouse_move)
-        stages_canvas.tag_bind(text, '<Motion>', stage_mouse_move)
+        for item in [image, text]:
+            stages_canvas.tag_bind(item, '<ButtonPress-1>', lambda event: stage_mb_down(event, stage_index))
+            stages_canvas.tag_bind(item, '<ButtonRelease-1>', stage_mb_up)
+            stages_canvas.tag_bind(item, '<Motion>', stage_mouse_move)
+            stages_canvas.tag_bind(item, '<Enter>', lambda event: stages_canvas.config(cursor='hand2'))
+            stages_canvas.tag_bind(item, '<Leave>', lambda event: stages_canvas.config(cursor=''))
+            
         if name != 'Input':
             remove = ctk.CTkButton(stages_canvas, text='', image=stage_remove_image,
                    width=21, height=21, fg_color=bg_color,
