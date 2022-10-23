@@ -1,5 +1,6 @@
 {
   "color": {
+	"deselected": ["#BBBBBB", "#4C4C4C"],
 	"bg_color": ["#EBEBEC", "#212325"],
     "window_bg_color": ["gray98", "gray10"],
     "button": ["#608BD5", "#395E9C"],
@@ -76,5 +77,23 @@
     "switch_button_length": 0,
     "scrollbar_corner_radius": 1000,
     "scrollbar_border_spacing": 4
+  },
+  "path": {
+	"stage_hidden": "resources/stage_hidden.png",
+	"stage_remove": "resources/stage_remove.png",
+	"stage_shown": "resources/stage_shown.png",
+	"toolbar_icon": "resources/toolbar.png",
+	"toolbar_separator": "resources/toolbar_separator.png",
+	"loading_animation": ["resources/loading_light.gif", "resources/loading_dark.gif"],
+	"stage_down": ["resources/stage_down_light_3.png", "resources/stage_down_dark_3.png"],
+	"stage_up": ["resources/stage_up_light.png", "resources/stage_up_dark.png"],
+	"toolbar_clear": ["resources/toolbar_clear_light.png", "resources/toolbar_clear_dark.png"],
+	"toolbar_copy": ["resources/toolbar_copy_light.png", "resources/toolbar_copy_dark.png"],
+	"toolbar_decrease": ["resources/toolbar_decrease_light.png", "resources/toolbar_decrease_dark.png"],
+	"toolbar_increase": ["resources/toolbar_increase_light.png", "resources/toolbar_increase_dark.png"],
+	"toolbar_options": ["resources/toolbar_options_light.png", "resources/toolbar_options_dark.png"],
+	"toolbar_stage": ["resources/toolbar_stage_light.png", "resources/toolbar_stage_dark.png"],
+	"toolbar_theme": ["resources/toolbar_theme_light.png", "resources/toolbar_theme_dark.png"],
+	"window_icon": "resources/icon.png"
   }
 }
