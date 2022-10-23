@@ -4,10 +4,10 @@ def output_thread(queue_in, queue_out):
         text = updates.pop(0)
         returns = []
         for update in updates:
-            function, args = update
+            function, args, analysis = update
             result = function(text, *args)
             returns.append(result)
-            text = result[0]
+            if not analysis: text = result[0]
         queue_out.put(returns)
 
 if __name__ == '__main__':
@@ -23,7 +23,7 @@ if __name__ == '__main__':
     import time
 
     class Input(Stage):
-        def __init__(self, update_ouput):
+        def __init__(self, update_output):
             super().__init__(update_output)
             self.input = ''
 
@@ -42,7 +42,6 @@ if __name__ == '__main__':
             if self.modified:
                 self.input_widget.edit_modified(False)
                 self.input = self.input_widget.get(1.0, 'end').removesuffix('\n')
-                root.update()
                 self.update_output(self)
 
         def display(self):
@@ -148,6 +147,7 @@ if __name__ == '__main__':
         ctk.CTkLabel(root, text=lang['stage_content']).grid(row=1, column=0)
         ctk.CTkLabel(root, text=lang['stage_list']).grid(row=1, column=1)
         ctk.CTkLabel(root, text=lang['output']).grid(row=1, column=2)
+        root.update()
         
         results = {}
         max_result = ''
@@ -157,11 +157,14 @@ if __name__ == '__main__':
         stage_positions = {}
         for stage in old_stage_positions.values():
             stage = old_current_stages[stage]
-            add_stage(0, type(stage[0]).__name__, stage[0])
+            add_stage(0, type(stage[0]).__name__, stage[0], update=False)
 
         if selected_stage >= 0 and len(stage_positions) != 0:
             index = selected_stage
             switch_stage(index, unselect=False)
+
+        root.update()
+        stage_scroll(None)
 
     def update_window():
         global lang, theme, mode, stage_up_image, stage_down_image, toolbar_options_image
@@ -229,7 +232,8 @@ if __name__ == '__main__':
         global toolbar_animated
 
         toolbar.config(height=start, width=root.winfo_width())
-        root.update()
+        if start != 0 and start != 72 and start % 72 / toolbar_step // (toolbar_updates + 1) * toolbar_step == 0:
+            root.update()
         if start * (step / abs(step)) < stop:
             toolbar.after(delay, toolbar_animation, toolbar_active, start + step, stop, step, delay)
         else:
@@ -348,7 +352,7 @@ if __name__ == '__main__':
         name = stage.__name__
         defined_stages[stage_type][name] = stage
 
-    def add_stage(stage_type, name, stage=None):
+    def add_stage(stage_type, name, stage=None, update=True):
         global max_result, stages_last
         
         length = len(stage_positions.keys())
@@ -357,10 +361,9 @@ if __name__ == '__main__':
         y = (stage_up_image.height() + 4) * length + stage_up_image.height() // 2
         stages_last = max(stages_last, y + stage_up_image.height() // 2)
         y -= stages_pos
-        image = stages_canvas.create_image(0, y, image=stage_up_image)
-        text = stages_canvas.create_text(0, y - 4, text=display_name,
-                                         font=(theme['text'][os]['font'],
-                                               theme['text'][os]['size'] + 2),
+        image = stages_canvas.create_image(stages_canvas.winfo_width() // 2, y, image=stage_up_image)
+        text = stages_canvas.create_text(stages_canvas.winfo_width() // 2, y - 4, text=display_name,
+                                         font=(theme['text'][os]['font'], theme['text'][os]['size'] + 2),
                                          fill=theme['color']['text'][mode])
         
         if stage:
@@ -414,8 +417,8 @@ if __name__ == '__main__':
             else:
                 current_stages.append((stage, image, text))
         else:
-            if stage_type != 1:
-                returns = threaded_update([max_result, (stage.update, stage.update_vars)])
+            if stage_type != 1 and update:
+                returns = threaded_update([max_result, (stage.update, stage.update_vars, False)])
                 results[stage_index] = returns[0][0]
                 stage.update_widgets(*returns[0][1])
             if replace:
@@ -423,19 +426,14 @@ if __name__ == '__main__':
             else:
                 current_stages.append([stage, image, text, remove, toggle_show])
 
-        if stage_type != 1:
+        if stage_type != 1 and update:
             max_result = results[stage_index]
             set_output(max_result)
-        root.update()
-        for stage in stage_positions.values():
-            stage = current_stages[stage]
-            text_y = stages_canvas.coords(stage[2])[1]
-            image_y = stages_canvas.coords(stage[1])[1]
-            stages_canvas.coords(stage[2], stages_canvas.winfo_width() // 2, text_y)
-            stages_canvas.coords(stage[1], stages_canvas.winfo_width() // 2, image_y)
-        stage_scroll(None)
+        if update:
+            root.update()
+            stage_scroll(None)
 
-    def remove_stage(stage_index):
+    def remove_stage(stage_index, update=True):
         global stages_last
         
         stage = current_stages[stage_index]
@@ -456,9 +454,11 @@ if __name__ == '__main__':
                 switch_stage(stage_positions[len(stage_positions) - 1], unselect=False)
             else:
                 switch_stage(stage_positions[pos_index], unselect=False)
-        remove_result(stage_index, pos_index)
-        root.update()
-        stage_scroll(None)
+        remove_result(stage_index, pos_index, update=update)
+
+        if update:
+            root.update()
+            stage_scroll(None)
 
     def move_stages(range_start, range_end, amount):
         global stages_last
@@ -494,12 +494,12 @@ if __name__ == '__main__':
             results[stage_index] = ''
             update_output(stage[0])
 
-    def remove_result(stage_index, pos_index):
+    def remove_result(stage_index, pos_index, update=True):
         global max_result
         
         if stage_index in results:
             del results[stage_index]
-        if pos_index != len(stage_positions):
+        if pos_index != len(stage_positions) and update:
             update_output(current_stages[stage_positions[pos_index]][0])
         else:
             max_result = results[next(v for k, v in reversed(stage_positions.items()) if v in results)]
@@ -628,9 +628,9 @@ if __name__ == '__main__':
             for i, v in enumerate(updating_stages[1:]):
                 function = current_stages[v[0]][0].update
                 args = current_stages[v[0]][0].update_vars
-                updates.append((function, args))
-                if not v[1]:
-                    i -= 1
+                if v[1]: analysis = False
+                else: analysis = True
+                updates.append((function, args, analysis))
             returns = threaded_update(updates)
             for i, v in enumerate(updating_stages[1:]):
                 if v[1]:
@@ -646,13 +646,13 @@ if __name__ == '__main__':
         global loading
 
         loading = True
-        root.after(100, start_loading_animation, 0, True)
+        root.after(200, start_loading_animation, 0, True)
         update_queue_in.put(updates)
         while True:
             if update_queue_out.empty():
                 root.update()
                 root.update_idletasks()
-                time.sleep(loading_delay)
+                time.sleep(loading_delay / 1000)
             else:
                 returns = update_queue_out.get()
                 break
@@ -686,7 +686,9 @@ if __name__ == '__main__':
     def clear_stages():
         for i, v in enumerate(current_stages[1:]):
             if v:
-                remove_stage(i + 1)
+                remove_stage(i + 1, update=False)
+        root.update()
+        stage_scroll(None)
         current_stages[0][0].input_widget.delete(1.0, 'end')
 
     def change_font_size(amount):
