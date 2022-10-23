@@ -1,3 +1,15 @@
+def output_thread(queue_in, queue_out):
+    while True:
+        updates = queue_in.get()
+        text = updates.pop(0)
+        returns = []
+        for update in updates:
+            function, args = update
+            result = function(text, *args)
+            returns.append(result)
+            text = result[0]
+        queue_out.put(returns)
+
 if __name__ == '__main__':
     from constants import *
     from stages_text import *
@@ -8,25 +20,30 @@ if __name__ == '__main__':
     import multiprocessing
     import darkdetect
     import json
+    import time
 
-    class Input:
-        def __init__(self, frame, update_ouput):
-            self.update_output = update_ouput
+    class Input(Stage):
+        def __init__(self, update_ouput):
+            super().__init__(update_output)
             self.input = ''
-            self.setup(frame)
 
         def setup(self, frame):
+            super().setup(frame)
             self.input_widget = tk.Text(frame, bd=0, bg=theme['color']['entry'][mode],
                                         font=(theme['text'][os]['font'], font_size),
                                          fg=theme['color']['text'][mode],
                                         insertbackground=theme['color']['text'][mode])
             self.input_widget.insert(1.0, self.input)
             self.input_widget.bind('<<Modified>>', self.on_modify)
+            self.modified = False
 
         def on_modify(self, event):
-            self.input_widget.tk.call(self.input_widget._w, 'edit', 'modified', 0)
-            self.input = self.input_widget.get(1.0, 'end').removesuffix('\n')
-            self.update_output(self)
+            self.modified = not self.modified
+            if self.modified:
+                self.input_widget.edit_modified(False)
+                self.input = self.input_widget.get(1.0, 'end').removesuffix('\n')
+                root.update()
+                self.update_output(self)
 
         def display(self):
             self.input_widget.grid(padx=8, pady=8, sticky='NESW')
@@ -46,15 +63,15 @@ if __name__ == '__main__':
     def create_widgets():
         global toolbar, tooblar_animated, radio_buttons, stages_canvas, stage_frame, stage_output
         global results, current_stages, stage_positions, selected_stage, toolbar_canvas, max_result
-        global toolbar_stages_pos, stages_pos, dragged_stage
+        global toolbar_stages_pos, stages_pos, dragged_stage, loading_animation_label, loading
 
         toolbar_animated = False
         toolbar_stages_pos = 0
         stages_pos = 0
         dragged_stage = -1
-        
+        loading = False
         bg_color = named_to_hex(theme['color']['bg_color'][mode])
-        
+
         toolbar = ctk.CTkFrame(root, fg_color=bg_color)
         toolbar.grid_propagate(0)
         toolbar.columnconfigure(1, weight=1)
@@ -111,6 +128,7 @@ if __name__ == '__main__':
         stage_frame.columnconfigure(0, weight=1)
         stage_frame.rowconfigure(0, weight=1)
         stage_frame.grid_propagate(0)
+        loading_animation_label = ctk.CTkLabel(stage_frame)
         output_frame = ctk.CTkFrame(root, fg_color=named_to_hex(theme['color']['entry'][mode]))
         output_frame.grid(row=2, column=2, rowspan=2, sticky='NESW')
         output_frame.rowconfigure(0, weight=1)
@@ -146,10 +164,10 @@ if __name__ == '__main__':
             switch_stage(index, unselect=False)
 
     def update_window():
-        global lang, theme, mode, stage_up_image, stage_down_image, stage_shown_image, os
-        global stage_hidden_image, stage_remove_image, toolbar_active, toolbar_separator_image
+        global lang, theme, mode, stage_up_image, stage_down_image, toolbar_options_image, font_size
+        global stage_hidden_image, stage_remove_image, toolbar_active, toolbar_separator_image, os
         global toolbar_increase_image, toolbar_decrease_image, toolbar_copy_image, toolbar_clear_image
-        global toolbar_theme_image, toolbar_stage_image, toolbar_options_image, font_size
+        global toolbar_theme_image, toolbar_stage_image, stage_shown_image, loading_animation_images
         
         lang_file = open(lang_path + '\\' + lang_name + '.json')
         lang = json.load(lang_file)
@@ -179,6 +197,8 @@ if __name__ == '__main__':
         toolbar_clear_image = tk.PhotoImage(file=path_toolbar_clear[mode])
         toolbar_theme_image = tk.PhotoImage(file=path_toolbar_theme[mode])
         toolbar_options_image = tk.PhotoImage(file=path_toolbar_options[mode])
+        loading_animation_images = [tk.PhotoImage(file=path_loading_animation[mode],
+                                                  format=f'gif -index {x}') for x in range(8)]
         root.title(lang['title'])
 
         ctk.set_appearance_mode(mode_name)
@@ -192,14 +212,14 @@ if __name__ == '__main__':
             toggle_toolbar()
         radio_select(radio_selected)
 
-    def check_queue():
+    def check_darkdetect_queue():
         try:
-            queue.get(False)
+            darkdetect_queue.get(False)
             if mode_name == 'default':
                 update_window()
         except:
             pass
-        root.after(check_queue_delay, check_queue)
+        root.after(check_queue_delay, check_darkdetect_queue)
 
     def toolbar_animation(toolbar_active, start, stop, step, delay):
         global toolbar_animated
@@ -340,7 +360,7 @@ if __name__ == '__main__':
         if stage:
             stage.setup(stage_frame)
         else:
-            stage = defined_stages[stage_type][name](stage_frame, update_output)
+            stage = defined_stages[stage_type][name](update_output)
             stage.setup(stage_frame)
 
         for i, v in enumerate(current_stages):
@@ -388,7 +408,9 @@ if __name__ == '__main__':
                 current_stages.append((stage, image, text))
         else:
             if stage_type != 1:
-                results[stage_index] = stage.update(results[max(results.keys())])
+                returns = threaded_update([max_result, (stage.update, stage.update_vars)])
+                results[stage_index] = returns[0][0]
+                stage.update_widgets(*returns[0][1])
             if replace:
                 current_stages[stage_index] = [stage, image, text, remove, toggle_show]
             else:
@@ -420,14 +442,14 @@ if __name__ == '__main__':
         stage[3].destroy()
         stage[4].destroy()
         move_stages(pos_index + 1, len(stage_positions), -1)
-        remove_result(stage_index, pos_index)
         stages_last -= stage_up_image.height() + stage_spaceing
-        
+
         if selected_stage == stage_index:
             if pos_index == len(stage_positions):
                 switch_stage(stage_positions[len(stage_positions) - 1], unselect=False)
             else:
                 switch_stage(stage_positions[pos_index], unselect=False)
+        remove_result(stage_index, pos_index)
         root.update()
         stage_scroll(None)
 
@@ -462,15 +484,15 @@ if __name__ == '__main__':
         else:
             stage[4].configure(image=stage_shown_image)
             stages_shown[stage_index] = True
-            results[stage_index] = stage[0].update(results[max(results.keys())])
-            set_output(results[max(results.keys())])
+            results[stage_index] = ''
+            update_output(stage[0])
 
     def remove_result(stage_index, pos_index):
         global max_result
         
         if stage_index in results:
             del results[stage_index]
-        if pos_index in stage_positions:
+        if pos_index != len(stage_positions):
             update_output(current_stages[stage_positions[pos_index]][0])
         else:
             max_result = results[next(v for k, v in reversed(stage_positions.items()) if v in results)]
@@ -566,8 +588,8 @@ if __name__ == '__main__':
             dragged_stage = -1
 
     def update_output(stage):
-        global max_result
-        
+        global max_result, results
+
         start_stage_index = [i for i, v in enumerate(current_stages) if v and v[0] is stage][0]
         start_pos_index = next(k for k, v in stage_positions.items() if v == start_stage_index)
         updating_stages = []
@@ -594,16 +616,61 @@ if __name__ == '__main__':
             to_search = list(stage_positions.values())
             to_search = to_search[:to_search.index(search_item)]
             updating_stages.insert(0, ([x for x in to_search if x < search_item and x in results][-1], True))
-        for i, v in enumerate(updating_stages[1:]):
-            if v[1]:
-                results[v[0]] = current_stages[v[0]][0].update(results[updating_stages[i][0]])
-            else:
-                current_stages[v[0]][0].update(results[updating_stages[i][0]])
-                i -= 1
-
-        max_result = max_result = results[next(v for k, v in reversed(stage_positions.items()) if v in results)]
+            
+            updates = [results[updating_stages[0][0]]]
+            for i, v in enumerate(updating_stages[1:]):
+                function = current_stages[v[0]][0].update
+                args = current_stages[v[0]][0].update_vars
+                updates.append((function, args))
+                if not v[1]:
+                    i -= 1
+            returns = threaded_update(updates)
+            for i, v in enumerate(updating_stages[1:]):
+                if v[1]:
+                    results[v[0]] = returns[i][0]
+                    current_stages[v[0]][0].update_widgets(*returns[i][1])
+                else:
+                    current_stages[v[0]][0].update_widgets(*returns[i])
+            
+        max_result = results[next(v for k, v in reversed(stage_positions.items()) if v in results)]
         set_output(max_result)
 
+    def threaded_update(updates):
+        global loading
+
+        loading = True
+        root.after(100, start_loading_animation, 0, True)
+        update_queue_in.put(updates)
+        while True:
+            if update_queue_out.empty():
+                root.update()
+                root.update_idletasks()
+                time.sleep(loading_delay)
+            else:
+                returns = update_queue_out.get()
+                break
+        loading = False
+        
+        return returns
+
+    def start_loading_animation(frame, start=False):
+        global loading
+
+        if start == True and loading:
+            stage_frame.grab_set()
+            for widget in stage_frame.winfo_children():
+                if widget != loading_animation_label:
+                    widget.grid_forget()
+            loading_animation_label.grid()
+            start_loading_animation(frame)
+        elif loading:
+            loading_animation_label.configure(image=loading_animation_images[frame])
+            root.after(100, start_loading_animation, (frame + 1) % 8)
+        else:
+            stage_frame.grab_release()
+            loading_animation_label.grid_forget()
+            current_stages[selected_stage][0].display()
+    
     def copy_output():
         root.clipboard_clear()
         root.clipboard_append(max_result)
@@ -634,10 +701,15 @@ if __name__ == '__main__':
     root = ctk.CTk()
     icon = tk.PhotoImage(file=path_window_icon)
     toolbar_toggle_image = tk.PhotoImage(file=path_toolbar_icon)
-    queue = multiprocessing.Queue()
-    x = multiprocessing.Process(target=darkdetect.listener, args=(queue.put,))
+    darkdetect_queue = multiprocessing.Queue()
+    x = multiprocessing.Process(target=darkdetect.listener, args=(darkdetect_queue.put,))
     x.daemon = True
     x.start()
+    update_queue_in = multiprocessing.Queue()
+    update_queue_out = multiprocessing.Queue()
+    y = multiprocessing.Process(target=output_thread, args=(update_queue_in, update_queue_out))
+    y.daemon = True
+    y.start()
     toolbar_active = False
     toolbar_animated = False
     modes = ['light', 'dark']
@@ -670,10 +742,10 @@ if __name__ == '__main__':
 
     create_stage(Length, 1)
     
-    check_queue()
+    check_darkdetect_queue()
     update_window()
 
-    add_stage(0, 'Input', Input(stage_frame, update_output))
+    add_stage(0, 'Input', Input(update_output))
     switch_stage(0, unselect=False)
-
+    
     root.mainloop()
