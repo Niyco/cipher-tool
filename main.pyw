@@ -35,6 +35,7 @@ if __name__ == '__main__':
                                         insertbackground=theme['color']['text'][mode])
             self.input_widget.insert(1.0, self.input)
             self.input_widget.bind('<<Modified>>', self.on_modify)
+            self.input_widget.bind('<Control-BackSpace>', self.ctrl_backspace)
             self.modified = False
 
         def on_modify(self, event):
@@ -44,7 +45,17 @@ if __name__ == '__main__':
                 self.input = self.input_widget.get(1.0, 'end').removesuffix('\n')
                 self.update_output(self)
 
+        def ctrl_backspace(self, event):
+            text = self.input_widget.get('1.0', 'insert')
+            end = max(text.rfind(' '), text.rfind('\n'))
+            self.input_widget.delete(1.0, 'end')
+            self.input_widget.insert(1.0, self.input[:end + 1].rstrip())
+
+            return 'break'
+
         def display(self):
+            self.frame.columnconfigure(0, weight=1)
+            self.frame.rowconfigure(0, weight=1)
             self.input_widget.grid(padx=8, pady=8, sticky='NESW')
         
     def resize(event):
@@ -415,13 +426,16 @@ if __name__ == '__main__':
             else:
                 current_stages.append((stage, image, text))
         else:
-            if stage_type != 1 and update:
+            if update:
                 if threaded:
                     returns = threaded_update([max_result, (stage.update, stage.update_vars, False)])
                 else:
                     returns = unthreaded_update([max_result, (stage.update, stage.update_vars, False)])
-                results[stage_index] = returns[0][0]
-                stage.update_widgets(*returns[0][1])
+                if stage_type != 1:
+                    results[stage_index] = returns[0][0]
+                    stage.update_widgets(*returns[0][1])
+                else:
+                    stage.update_widgets(*returns[0])
             if replace:
                 current_stages[stage_index] = [stage, image, text, remove, toggle_show]
             else:
@@ -484,16 +498,19 @@ if __name__ == '__main__':
 
     def toggle_hidden(stage_index):
         stage = current_stages[stage_index]
+        analysis = bool([True for x in defined_stages[1] if isinstance(stage[0], defined_stages[1][x])])
         pos_index = next(k for k, v in stage_positions.items() if v == stage_index)
         if stages_shown[stage_index]:
             stage[4].configure(image=stage_hidden_image)
             stages_shown[stage_index] = False
-            remove_result(stage_index, pos_index)
+            if not analysis:
+                remove_result(stage_index, pos_index)
         else:
             stage[4].configure(image=stage_shown_image)
             stages_shown[stage_index] = True
-            results[stage_index] = ''
-            update_output(stage[0])
+            if not analysis:
+                results[stage_index] = ''
+                update_output(stage[0])
 
     def remove_result(stage_index, pos_index, update=True):
         global max_result

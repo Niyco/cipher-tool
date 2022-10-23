@@ -21,7 +21,8 @@ class Strip(Stage):
     def __init__(self, update_output):
         super().__init__(update_output)
         self.spaces_var = tk.IntVar()
-        self.update_vars = (False,)
+        self.spaces_var.set(1)
+        self.update_vars = (True,)
         
     def setup(self, frame):
         super().setup(frame)

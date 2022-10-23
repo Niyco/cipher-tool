@@ -10,7 +10,7 @@ stages_drag_max = 8
 loading_delay = 50
 threaded = False
 mode_name = 'default'
-theme_name = 'green'
+theme_name = 'dark-blue'
 lang_name = 'lang_en'
 
 alphabet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q',
