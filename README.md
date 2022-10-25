@@ -5,6 +5,8 @@ A python program containing tools for encrypting and decrypting classical cipher
 * None
 ## Analysis tools:
 * Length
+* Frequency Analysis
+* Index of Coincidence
 ## Text manipulation tools:
 * Uppercase
 * Lowercase
