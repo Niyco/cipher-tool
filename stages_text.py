@@ -1,33 +1,33 @@
-from constants import *
+import constants
 import tkinter as tk
 import customtkinter as ctk
 import math
 
-class UpperCase(Stage):
+class UpperCase(constants.Stage):
     @staticmethod
     def update(text):
         return (text.upper(), ())
     
-class LowerCase(Stage):
+class LowerCase(constants.Stage):
     @staticmethod
     def update(text):
         return (text.lower(), ())
 
-class Reverse(Stage):
+class Reverse(constants.Stage):
     @staticmethod
     def update(text):
         return (text[::-1], ())
 
-class Strip(Stage):
+class Strip(constants.Stage):
     def __init__(self, update_output):
         super().__init__(update_output)
         self.spaces_var = tk.IntVar()
         self.spaces_var.set(1)
         self.update_vars = (True,)
         
-    def setup(self, frame):
-        super().setup(frame)
-        self.checkbox = ctk.CTkCheckBox(frame, text='Strip Spaces', variable=self.spaces_var,
+    def setup(self, frame, texts):
+        super().setup(frame, texts)
+        self.checkbox = ctk.CTkCheckBox(frame, text=texts['checkbox'], variable=self.spaces_var,
                                         command=self.checkbox_update)
 
     def checkbox_update(self):
@@ -37,9 +37,9 @@ class Strip(Stage):
     @staticmethod
     def update(text, spaces):
         if spaces:
-            stripped = ''.join([c for c in text if c.lower() in alphabet])
+            stripped = ''.join([c for c in text if c.lower() in constants.alphabet])
         else:
-            stripped = ''.join([c for c in text if c.lower() in alphabet + [' ']])
+            stripped = ''.join([c for c in text if c.lower() in constants.alphabet + [' ']])
             
         return (stripped, ())
 
@@ -48,7 +48,7 @@ class Strip(Stage):
         self.frame.rowconfigure(0, weight=1)
         self.checkbox.grid(row=0, column=0)
 
-class Block(Stage):
+class Block(constants.Stage):
     def __init__(self, update_output):
         super().__init__(update_output)
         self.block_length_var = tk.StringVar()
@@ -56,9 +56,9 @@ class Block(Stage):
         self.block_length_var.trace('w', self.input_update)
         self.update_vars = (5,)
 
-    def setup(self, frame):
-        super().setup(frame)
-        self.label = ctk.CTkLabel(frame, text='Block Length:')
+    def setup(self, frame, texts):
+        super().setup(frame, texts)
+        self.label = ctk.CTkLabel(frame, text=texts['label'])
         self.input = ctk.CTkEntry(frame, textvariable=self.block_length_var, width=30)
         self.input.bind('<MouseWheel>', self.input_scroll)
 
@@ -95,7 +95,7 @@ class Block(Stage):
         self.label.grid(row=0, column=0, sticky='E')
         self.input.grid(row=0, column=1, sticky='W')
 
-class Spaces(Stage):
+class Spaces(constants.Stage):
     def __init__(self, update_output):
         super().__init__(update_output)
         self.complexity_var = tk.IntVar()
@@ -103,10 +103,10 @@ class Spaces(Stage):
         self.complexity_var.trace('w', self.input_update)
         self.update_vars = (2,)
 
-    def setup(self, frame):
-        super().setup(frame)
+    def setup(self, frame, texts):
+        super().setup(frame, texts)
         self.slider = ctk.CTkSlider(frame, from_=1, to=5, number_of_steps=4, variable=self.complexity_var)
-        self.label = ctk.CTkLabel(frame, text='Complexity:')
+        self.label = ctk.CTkLabel(frame, text=texts['label'])
 
     def input_update(self, var, index, mode):
         value = self.complexity_var.get()
@@ -118,8 +118,8 @@ class Spaces(Stage):
         complexity += 1
         
         def cal_score(word):
-            if word.lower() in word_frequencies:
-                word_frequency = math.log(word_frequencies[word.lower()], 10) + 6
+            if word.lower() in constants.word_frequencies:
+                word_frequency = math.log(constants.word_frequencies[word.lower()], 10) + 6
             else:
                 word_frequency = 0
 
@@ -152,13 +152,13 @@ class Spaces(Stage):
 
         final_string = ''
         for string in text.split(' '):
-            string = ''.join([c for c in string if c.lower() in alphabet + ['\'']])
+            string = ''.join([c for c in string if c.lower() in constants.alphabet + ['\'']])
             string_length = len(string)
             
             best_scores = [None] * (string_length)
 
             for index in range(string_length + 1):
-                for length in range(1, min(max_word_length, string_length - index + 1)):
+                for length in range(1, min(constants.max_word_length, string_length - index + 1)):
                     score = cal_score(string[index:index + length])
                     if best_scores[index]:
                         best_scores[index].append((score, length))
@@ -175,7 +175,6 @@ class Spaces(Stage):
                 split_string += string[index:index + best_scores[index][path[0]][1]] + ' '
                 index += best_scores[index][path[0]][1]
 
-            print(split_string)
             final_string += split_string
                     
         return (final_string, ())
