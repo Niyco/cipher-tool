@@ -11,3 +11,4 @@ A python program containing tools for encrypting and decrypting classical cipher
 * Reverse
 * Strip Text
 * Block Text
+* Add Spaces
