@@ -182,9 +182,6 @@ if __name__ == '__main__':
         global toolbar_theme_image, toolbar_stage_image, stage_shown_image, loading_animation_images
         global icon_image, toolbar_toggle_image, os, font_size, toolbar_clear_image
         
-        lang_file = open(lang_path + lang_name + '.json')
-        lang = json.load(lang_file)
-        lang_file.close()
         theme_file = open(theme_path + theme_name + '.json')
         theme = json.load(theme_file)
         theme_file.close()
@@ -784,6 +781,7 @@ if __name__ == '__main__':
     create_stage(Reverse, 0)
     create_stage(Strip, 0)
     create_stage(Block, 0)
+    create_stage(Spaces, 0)
 
     create_stage(Length, 1)
     

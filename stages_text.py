@@ -1,6 +1,7 @@
 from constants import *
 import tkinter as tk
 import customtkinter as ctk
+import math
 
 class UpperCase(Stage):
     @staticmethod
@@ -93,3 +94,95 @@ class Block(Stage):
         self.frame.rowconfigure(0, weight=1)
         self.label.grid(row=0, column=0, sticky='E')
         self.input.grid(row=0, column=1, sticky='W')
+
+class Spaces(Stage):
+    def __init__(self, update_output):
+        super().__init__(update_output)
+        self.complexity_var = tk.IntVar()
+        self.complexity_var.set(2)
+        self.complexity_var.trace('w', self.input_update)
+        self.update_vars = (2,)
+
+    def setup(self, frame):
+        super().setup(frame)
+        self.slider = ctk.CTkSlider(frame, from_=1, to=5, number_of_steps=4, variable=self.complexity_var)
+        self.label = ctk.CTkLabel(frame, text='Complexity:')
+
+    def input_update(self, var, index, mode):
+        value = self.complexity_var.get()
+        self.update_vars = (value,)
+        self.update_output(self)
+
+    @staticmethod
+    def update(text, complexity):
+        complexity += 1
+        
+        def cal_score(word):
+            if word.lower() in word_frequencies:
+                word_frequency = math.log(word_frequencies[word.lower()], 10) + 6
+            else:
+                word_frequency = 0
+
+            return word_frequency * (len(word) ** 2)
+
+        def cal_best_path(text_index, complexity):
+            paths = []
+            factorial = math.factorial(complexity)
+            length = factorial
+            
+            for x in range(factorial):
+                paths.append([[x // (factorial // complexity)]])
+            factorial = factorial // complexity
+            for y in range(complexity - 1, 1, -1):
+                for z in range(length):
+                    paths[z][0].append(z // (factorial // y) % y)
+                factorial = factorial // y
+                
+            for path in paths:
+                score = 0
+                index = text_index
+                for location in path[0]:
+                    if index == string_length or location >= len(best_scores[index]):
+                        break
+                    score += best_scores[index][location][0]
+                    index += best_scores[index][location][1]
+                path.append(score)
+
+            return max(paths, key=lambda e: e[1])[0]
+
+        final_string = ''
+        for string in text.split(' '):
+            string = ''.join([c for c in string if c.lower() in alphabet + ['\'']])
+            string_length = len(string)
+            
+            best_scores = [None] * (string_length)
+
+            for index in range(string_length + 1):
+                for length in range(1, min(max_word_length, string_length - index + 1)):
+                    score = cal_score(string[index:index + length])
+                    if best_scores[index]:
+                        best_scores[index].append((score, length))
+                    else:
+                        best_scores[index] = [(score, length)]
+            
+            for index in best_scores:
+                index.sort(reverse=True, key=lambda e: e[0])
+
+            split_string = ''
+            index = 0
+            while index < string_length:
+                path = cal_best_path(index, min(complexity, string_length - index))
+                split_string += string[index:index + best_scores[index][path[0]][1]] + ' '
+                index += best_scores[index][path[0]][1]
+
+            print(split_string)
+            final_string += split_string
+                    
+        return (final_string, ())
+
+    def display(self):
+        self.frame.columnconfigure(0, weight=1)
+        self.frame.rowconfigure(0, weight=1)
+        self.frame.rowconfigure(1, weight=1)
+        self.label.grid(row=0, column=0, sticky='S')
+        self.slider.grid(row=1, column=0, sticky='N')
