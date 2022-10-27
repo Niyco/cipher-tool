@@ -64,6 +64,7 @@
 		"option_radio_6": "LSB on Left",
 		"label_1": "Letter Separator:",
 		"label_2": "Word Separator:",
+		"encode": "Encode",
 		"space": "Space"
 	}
 }

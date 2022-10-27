@@ -15,7 +15,7 @@ stages_drag_max = 8
 loading_delay = 50
 threaded = False
 mode_name = 'default'
-theme_name = 'dark-blue'
+theme_name = 'blue'
 lang_name = 'en'
 morse_codes = {'.-': 'a', '-...': 'b', '-.-.': 'c', '-..': 'd', '.': 'e', '..-.': 'f', '--.': 'g', '....': 'h',
                '..': 'i', '.---': 'j', '-.-': 'k', '.-..': 'l', '--': 'm', '-.': 'n', '---': 'o', '.--.': 'p',
