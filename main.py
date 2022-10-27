@@ -13,6 +13,7 @@ def output_thread(queue_in, queue_out):
 if __name__ == '__main__':
     from stages_text import *
     from stages_analysis import *
+    from stages_cipher import *
     import constants
     import tkinter as tk
     import customtkinter as ctk
@@ -791,6 +792,8 @@ if __name__ == '__main__':
     create_stage(Length, 1)
     create_stage(Frequency, 1)
     create_stage(IoC, 1)
+
+    create_stage(BinaryCode, 2)
     
     check_darkdetect_queue()
     update_window()
