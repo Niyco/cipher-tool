@@ -112,6 +112,8 @@ class BinaryCode(constants.Stage):
                     else:
                         new_codes[k] = v
                 codes = new_codes
+            elif encode:
+                codes = {v: k for k, v in codes.items()}
         elif mode == 2:
             codes = constants.binary_codes
             if option == 1:

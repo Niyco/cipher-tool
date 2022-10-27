@@ -543,8 +543,8 @@ if __name__ == '__main__':
             for widget in stage_frame.winfo_children():
                 widget.grid_forget()
             for i in range(0, 10):
-                stage_frame.rowconfigure(i, weight=0)
-                stage_frame.columnconfigure(i, weight=0)
+                stage_frame.rowconfigure(i, weight=0, minsize=0)
+                stage_frame.columnconfigure(i, weight=0, minsize=0)
             selected[0].display()
             stage_frame.focus_set()
 
