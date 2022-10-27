@@ -253,4 +253,52 @@ class BinaryCode(constants.Stage):
         if grid_add:
             grid_add[0].grid(column=0, row=4, padx=30, pady=15, sticky='WS')
             grid_add[1].grid(column=0, row=5, padx=30, pady=0, sticky='NW')
+
+class Caesar(constants.Stage):
+    def __init__(self, update_output):
+        super().__init__(update_output)
+        self.encode_var = tk.IntVar(value=0)
+        self.shift_var = tk.IntVar(value=0)
+        self.update_vars = (0, 0)
+
+    def setup(self, frame, texts):
+        super().setup(frame, texts)
+        self.encode_switch = ctk.CTkSwitch(frame, text=texts['encode'], onvalue=1, offvalue=0,
+                                    variable=self.encode_var)
+        self.shift_slider = ctk.CTkSlider(frame, from_=0, to=25, number_of_steps=25, width=375,
+                                          variable=self.shift_var)
+        self.label = ctk.CTkLabel(frame, text=texts['label'] + ' ' + str(self.shift_var.get()))
+        self.text = ctk.CTkEntry(frame)
+        self.shift_var.trace('w', self.trace_update)
+        self.encode_var.trace('w', self.trace_update)
+
+    def trace_update(self, var_name, index, mode):
+        if var_name == str(self.shift_var):
+            self.label.configure(text=self.texts['label'] + ' ' + str(self.shift_var.get()))
+        self.update_vars = (self.shift_var.get(), self.encode_var.get())
+        self.update_output(self)
+
+    @staticmethod
+    def update(text, shift, encode):
+        if encode:
+            shift = 26 - shift
             
+        shifted = ''
+        for letter in text:
+            if letter.lower() in constants.alphabet:
+                shifted_letter = constants.alphabet[(constants.alphabet.index(letter.lower()) + shift) % 26]
+                if letter.isupper():
+                    shifted_letter = shifted_letter.upper()
+                shifted += shifted_letter
+            else:
+                shifted += letter
+        
+        return (shifted, ())
+
+    def display(self):
+        self.frame.columnconfigure(0, weight=1)
+        self.frame.rowconfigure(0, weight=1)
+        self.frame.rowconfigure(1, weight=1)
+        self.encode_switch.grid(row=1, column=0, padx=15, pady=15, sticky='SE')
+        self.label.grid(row=0, column=0, pady=20, sticky='S')
+        self.shift_slider.grid(row=1, column=0, sticky='N')

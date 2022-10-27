@@ -66,5 +66,10 @@
 		"label_2": "Word Separator:",
 		"encode": "Encode",
 		"space": "Space"
+	},
+	"stage_caesar": {
+		"name": "Caesar",
+		"label": "Shift:",
+		"encode": "Encode"
 	}
 }

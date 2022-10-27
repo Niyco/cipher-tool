@@ -546,7 +546,7 @@ if __name__ == '__main__':
                 stage_frame.rowconfigure(i, weight=0)
                 stage_frame.columnconfigure(i, weight=0)
             selected[0].display()
-            stages_canvas.focus_set()
+            stage_frame.focus_set()
 
     def stage_mouse_move(event):
         global dragged_end
@@ -794,6 +794,7 @@ if __name__ == '__main__':
     create_stage(IoC, 1)
 
     create_stage(BinaryCode, 2)
+    create_stage(Caesar, 2)
     
     check_darkdetect_queue()
     update_window()
