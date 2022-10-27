@@ -2,7 +2,10 @@
 A python program containing tools for encrypting and decrypting classical ciphers
 
 ## Ciphers supported:
-* None
+* Morse Code
+* Baconian
+* Binary
+* Baudot
 ## Analysis tools:
 * Length
 * Frequency Analysis
