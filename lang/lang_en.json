@@ -72,10 +72,10 @@
 		"label": "Shift:",
 		"encode": "Encode"
 	},
-	"stage_subsitution": {
-		"name": "Subsitution",
-		"button_1": "Subsitute",
-		"button_2": "Unsubsitute",
+	"stage_substitution": {
+		"name": "Substitution",
+		"button_1": "Substitute",
+		"button_2": "Unsubstitute",
 		"encode": "Encode"
 	}
 }

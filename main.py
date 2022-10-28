@@ -682,10 +682,10 @@ if __name__ == '__main__':
     def threaded_update(updates):
         global loading, update_constants
 
-        stage_frame.grab_set()
+        loading_animation_label.grab_set()
         loading = True
         update_constants = False
-        root.after(400, start_loading_animation, 0, True)
+        after = loading_animation_label.after(400, start_loading_animation, 0, True)
         update_queue_in.put(updates)
         while True:
             if update_queue_out.empty():
@@ -695,8 +695,8 @@ if __name__ == '__main__':
             else:
                 returns = update_queue_out.get()
                 break
-        stage_frame.grab_release()
-        loading = False
+        loading_animation_label.grab_release()
+        loading_animation_label.after_cancel(after)
         
         return returns
 
@@ -810,7 +810,7 @@ if __name__ == '__main__':
 
     create_stage(BinaryCode, 2)
     create_stage(Caesar, 2)
-    create_stage(Subsitution, 2)
+    create_stage(Substitution, 2)
     
     check_darkdetect_queue()
     update_window()

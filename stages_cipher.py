@@ -304,11 +304,11 @@ class Caesar(Stage):
         self.label.grid(row=0, column=0, pady=20, sticky='S')
         self.shift_slider.grid(row=1, column=0, sticky='N')
 
-class Subsitution(Stage):
+class Substitution(Stage):
     def __init__(self, update_output):
         super().__init__(update_output)
         self.encode_var = tk.IntVar(value=0)
-        self.subsitutions = {}
+        self.substitutions = {}
         self.update_vars.extend([0, {}])
         
     def setup(self, frame, constants):
@@ -336,7 +336,7 @@ class Subsitution(Stage):
 
     def encode_switch_update(self, var, index, mode):
         self.update_vars[0] = self.encode_var.get()
-        self.update_subsitutions()
+        self.update_substitutions()
         self.update_output(self)
     
     def tab_order(self, item_index):
@@ -362,13 +362,13 @@ class Subsitution(Stage):
         if input_1 != input_2:
             if len(input_1) == len(input_2):
                 for i, c in enumerate(input_1):
-                    self.subsitutions[c] = input_2[i]
+                    self.substitutions[c] = input_2[i]
             elif input_2 == '':
                 for i, c in enumerate(input_1):
-                    self.subsitutions[c] = ''
+                    self.substitutions[c] = ''
                 
-        self.update_vars[1] = self.subsitutions
-        self.update_subsitutions()
+        self.update_vars[1] = self.substitutions
+        self.update_substitutions()
         self.update_output(self)
 
     def unsubsitute(self, event):
@@ -377,39 +377,39 @@ class Subsitution(Stage):
         if input_1 != input_2:
             if len(input_1) == len(input_2):
                 for i, c in enumerate(input_1):
-                    if c in self.subsitutions and input_2[i] in self.subsitutions:
-                        del self.subsitutions[c]
+                    if c in self.substitutions and input_2[i] in self.substitutions:
+                        del self.substitutions[c]
             elif input_2 == '':
                 for i, c in enumerate(input_1):
-                    if c in self.subsitutions:
-                        del self.subsitutions[c]
+                    if c in self.substitutions:
+                        del self.substitutions[c]
                     
-        self.update_vars[1] = self.subsitutions
-        self.update_subsitutions()
+        self.update_vars[1] = self.substitutions
+        self.update_substitutions()
         self.update_output(self)
     
     @staticmethod
-    def update(text, constants, encode, subsitutions):
+    def update(text, constants, encode, substitutions):
         if encode:
-            subsitutions = {v: k for k, v in subsitutions.items()}
+            substitutions = {v: k for k, v in substitutions.items()}
 
         result = ''
         for c in text:
-            if c in subsitutions:
-                result += subsitutions[c]
+            if c in substitutions:
+                result += substitutions[c]
             else:
                 result += c
         
         return (result, ())
 
-    def update_subsitutions(self):
-        self.subsitutions = dict(sorted(self.subsitutions.items(), key=self.subsitutions_sort_key))
+    def update_substitutions(self):
+        self.substitutions = dict(sorted(self.substitutions.items(), key=self.substitutions_sort_key))
         if self.encode_var.get(): arrow = '<-'
         else: arrow = '->'
         
         formatted = ''
-        for k in self.subsitutions:
-            v = self.subsitutions[k]
+        for k in self.substitutions:
+            v = self.substitutions[k]
             formatted += f'\'{k}\' {arrow} \'{v}\'\n'
 
         self.textbox.configure(state='normal')
@@ -417,7 +417,7 @@ class Subsitution(Stage):
         self.textbox.insert(1.0, formatted)
         self.textbox.configure(state='disabled')
 
-    def subsitutions_sort_key(self, element):
+    def substitutions_sort_key(self, element):
         key = element[0]
         if key.lower() in self.constants.alphabet:
             return self.constants.alphabet.index(key.lower())
