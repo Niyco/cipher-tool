@@ -1,11 +1,14 @@
 def output_thread(queue_in, queue_out):
+    cached_constants = None
     while True:
         updates = queue_in.get()
-        text = updates.pop(0)
+        text, constants = updates.pop(0)
+        if constants:
+            cached_constants = constants
         returns = []
         for update in updates:
             function, args, analysis = update
-            result = function(text, *args)
+            result = function(text, cached_constants, *args)
             returns.append(result)
             if not analysis: text = result[0]
         queue_out.put(returns)
@@ -14,7 +17,7 @@ if __name__ == '__main__':
     from stages_text import *
     from stages_analysis import *
     from stages_cipher import *
-    import constants
+    from defined import Stage, Constants
     import tkinter as tk
     import customtkinter as ctk
     import sys
@@ -24,13 +27,13 @@ if __name__ == '__main__':
     import json
     import time
 
-    class Input(constants.Stage):
+    class Input(Stage):
         def __init__(self, update_output):
             super().__init__(update_output)
             self.input = ''
 
-        def setup(self, frame, texts):
-            super().setup(frame, texts)
+        def setup(self, frame, constants):
+            super().setup(self, frame, constants)
             self.input_widget = tk.Text(frame, bd=0, bg=constants.theme['color']['entry'][constants.mode],
                                         font=(constants.theme['text'][constants.os]['font'], font_size),
                                          fg=constants.theme['color']['text'][constants.mode],
@@ -89,7 +92,7 @@ if __name__ == '__main__':
         toolbar.columnconfigure(1, weight=1)
         toolbar_radio = ctk.CTkFrame(toolbar, fg_color=bg_color, width=180)
         toolbar_radio.grid(row=0, column=0, sticky='NE')
-        toolbar_menu = ctk.CTkFrame(toolbar, fg_color=bg_color, width=230)
+        toolbar_menu = ctk.CTkFrame(toolbar, fg_color=bg_color, width=250)
         toolbar_menu.grid(row=0, column=2, sticky='NW')
         toolbar_canvas = tk.Canvas(toolbar, bg=bg_color, highlightthickness=0)
         toolbar_canvas.grid(row=0, column=1, sticky='EW')
@@ -143,7 +146,7 @@ if __name__ == '__main__':
         stages_canvas.columnconfigure(0, weight=1)
         stages_canvas.grid(row=3, column=1, sticky='NESW')
         stages_canvas.bind('<MouseWheel>', stage_scroll)
-        stages_canvas.create_rectangle(196, 0, 196, 0,
+        stages_canvas.create_rectangle(205, 0, 205, 0,
                                        outline=constants.theme['color']['deselected'][constants.mode])
         stage_frame = ctk.CTkFrame(root, fg_color=named_to_hex(constants.theme['color']['entry'][constants.mode]))
         stage_frame.grid(row=2, column=0, rowspan=2, sticky='NESW')
@@ -192,9 +195,10 @@ if __name__ == '__main__':
         global stage_hidden_image, stage_remove_image, toolbar_active, toolbar_separator_image
         global toolbar_increase_image, toolbar_decrease_image, toolbar_copy_image, font_size
         global toolbar_theme_image, toolbar_stage_image, stage_shown_image, loading_animation_images
-        global icon_image, toolbar_toggle_image
+        global icon_image, toolbar_toggle_image, update_constants
 
-        constants.load_constants()
+        constants.load()
+        update_constants = True
         if not font_size: font_size = constants.theme['text'][constants.os]['size']
         
         icon_image = tk.PhotoImage(file=constants.theme['path']['window_icon'])
@@ -350,7 +354,7 @@ if __name__ == '__main__':
             widget.place(x=widget.winfo_x(), y=widget.winfo_y() + stages_pos - new_pos)
         stages_pos = new_pos
         start, end = cal_scrollbar(stages_canvas.winfo_height(), stages_last, stages_pos)
-        stages_canvas.coords(1, 196, start, 196, end)
+        stages_canvas.coords(1, 205, start, 205, end)
 
     def cal_scrollbar(width, maximum, pos):
         if maximum <= width:
@@ -379,10 +383,10 @@ if __name__ == '__main__':
                                          fill=constants.theme['color']['text'][constants.mode])
         
         if stage:
-            stage.setup(stage_frame, constants.lang['stage_' + name.lower()])
+            stage.setup(stage_frame, constants)
         else:
             stage = defined_stages[stage_type][name](update_output)
-            stage.setup(stage_frame, constants.lang['stage_' + name.lower()])
+            stage.setup(stage_frame, constants)
 
         for i, v in enumerate(current_stages):
             if not v:
@@ -430,10 +434,14 @@ if __name__ == '__main__':
                 current_stages.append((stage, image, text))
         else:
             if update:
-                if constants.threaded:
-                    returns = threaded_update([max_result, (stage.update, stage.update_vars, stage_type == 1)])
+                if update_constants:
+                    to_send = constants
                 else:
-                    returns = unthreaded_update([max_result, (stage.update, stage.update_vars, stage_type == 1)])
+                    to_send = False
+                if constants.threaded:
+                    returns = threaded_update([(max_result, to_send), (stage.update, stage.update_vars, stage_type == 1)])
+                else:
+                    returns = unthreaded_update([(max_result, to_send), (stage.update, stage.update_vars, stage_type == 1)])
                 if stage_type != 1:
                     results[stage_index] = returns[0][0]
                     stage.update_widgets(*returns[0][1])
@@ -643,12 +651,14 @@ if __name__ == '__main__':
         if start_pos_index == 0:
             results[0] = current_stages[0][0].input
         if updating_stages:
-            search_item = updating_stages[0][0]
+            search_item = next(k for k, v in stage_positions.items() if v == updating_stages[0][0])
             to_search = list(stage_positions.values())
-            to_search = to_search[:to_search.index(search_item)]
             updating_stages.insert(0, ([x for x in to_search if x < search_item and x in results][-1], True))
-            
-            updates = [results[updating_stages[0][0]]]
+
+            if update_constants:
+                updates = [(results[updating_stages[0][0]], constants)]
+            else:
+                updates = [(results[updating_stages[0][0]], False)]
             for i, v in enumerate(updating_stages[1:]):
                 function = current_stages[v[0]][0].update
                 args = current_stages[v[0]][0].update_vars
@@ -670,9 +680,11 @@ if __name__ == '__main__':
         set_output(max_result)
 
     def threaded_update(updates):
-        global loading
+        global loading, update_constants
 
+        stage_frame.grab_set()
         loading = True
+        update_constants = False
         root.after(400, start_loading_animation, 0, True)
         update_queue_in.put(updates)
         while True:
@@ -683,16 +695,19 @@ if __name__ == '__main__':
             else:
                 returns = update_queue_out.get()
                 break
+        stage_frame.grab_release()
         loading = False
         
         return returns
 
     def unthreaded_update(updates):
-        text = updates.pop(0)
+        text, constant_args = updates.pop(0)
+        if not constant_args:
+            constant_args = constants
         returns = []
         for update in updates:
             function, args, analysis = update
-            result = function(text, *args)
+            result = function(text, constants, *args)
             returns.append(result)
             if not analysis: text = result[0]
 
@@ -702,7 +717,6 @@ if __name__ == '__main__':
         global loading
 
         if start == True and loading:
-            stage_frame.grab_set()
             for widget in stage_frame.winfo_children():
                 if widget != loading_animation_label:
                     widget.grid_forget()
@@ -712,7 +726,6 @@ if __name__ == '__main__':
             loading_animation_label.configure(image=loading_animation_images[frame])
             root.after(100, start_loading_animation, (frame + 1) % 8)
         else:
-            stage_frame.grab_release()
             loading_animation_label.grid_forget()
             current_stages[selected_stage][0].display()
     
@@ -747,6 +760,8 @@ if __name__ == '__main__':
             update_window()
 
     root = ctk.CTk()
+    constants = Constants()
+    update_constants = False
     if constants.threaded:
         darkdetect_queue = multiprocessing.Queue()
         x = multiprocessing.Process(target=darkdetect.listener, args=(darkdetect_queue.put,))

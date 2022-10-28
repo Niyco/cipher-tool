@@ -1,19 +1,19 @@
-import constants
+from defined import Stage
 import tkinter as tk
 import customtkinter as ctk
 
-class BinaryCode(constants.Stage):
+class BinaryCode(Stage):
     def __init__(self, update_output):
         super().__init__(update_output)
         self.encode_var = tk.IntVar(value=0)
         self.mode_var = tk.IntVar(value=0)
+        self.option_var = tk.IntVar(value=0)
         self.letter_separator_var = tk.StringVar()
         self.word_separator_var = tk.StringVar()
-        self.option_var = tk.IntVar(value=0)
-        self.update_vars = (0,)
+        self.update_vars.extend([0, 0, 0])
     
-    def setup(self, frame, texts):
-        super().setup(frame, texts)
+    def setup(self, frame, constants):
+        super().setup(self, frame, constants)
         self.letter_separator_var.set('')
         self.word_separator_var.set('')
         self.mode_var.trace('w', self.input_update)
@@ -21,40 +21,45 @@ class BinaryCode(constants.Stage):
         self.letter_separator_var.trace('w', self.input_update)
         self.word_separator_var.trace('w', self.input_update)
         self.option_var.trace('w', self.input_update)
-        self.update_vars = (self.mode_var.get(), '', '', self.option_var.get(), self.encode_var.get())
-        self.encode = ctk.CTkSwitch(frame, text=texts['encode'], onvalue=1, offvalue=0,
+        self.update_vars.extend([self.letter_separator_var.get(), self.word_separator_var.get()])
+        self.encode = ctk.CTkSwitch(frame, text=self.texts['encode'], onvalue=1, offvalue=0,
                                     variable=self.encode_var)
         self.cipher_radio_1 = ctk.CTkRadioButton(frame, variable=self.mode_var, value=0,
-                                                 text=texts['cipher_radio_1'])
+                                                 text=self.texts['cipher_radio_1'])
         self.cipher_radio_2 = ctk.CTkRadioButton(frame, variable=self.mode_var, value=1,
-                                                 text=texts['cipher_radio_2'])
+                                                 text=self.texts['cipher_radio_2'])
         self.cipher_radio_3 = ctk.CTkRadioButton(frame, variable=self.mode_var, value=2,
-                                                 text=texts['cipher_radio_3'])
+                                                 text=self.texts['cipher_radio_3'])
         self.cipher_radio_4 = ctk.CTkRadioButton(frame, variable=self.mode_var, value=3,
-                                                 text=texts['cipher_radio_4'])
+                                                 text=self.texts['cipher_radio_4'])
         self.option_radio_1 = ctk.CTkRadioButton(frame, variable=self.option_var, value=0,
-                                                 text=texts['option_radio_1'])
+                                                 text=self.texts['option_radio_1'])
         self.option_radio_2 = ctk.CTkRadioButton(frame, variable=self.option_var, value=1,
-                                                 text=texts['option_radio_2'])
+                                                 text=self.texts['option_radio_2'])
         self.option_radio_3 = ctk.CTkRadioButton(frame, variable=self.option_var, value=0,
-                                                 text=texts['option_radio_3'])
+                                                 text=self.texts['option_radio_3'])
         self.option_radio_4 = ctk.CTkRadioButton(frame, variable=self.option_var, value=1,
-                                                 text=texts['option_radio_4'])
+                                                 text=self.texts['option_radio_4'])
         self.option_radio_5 = ctk.CTkRadioButton(frame, variable=self.option_var, value=0,
-                                                 text=texts['option_radio_5'])
+                                                 text=self.texts['option_radio_5'])
         self.option_radio_6 = ctk.CTkRadioButton(frame, variable=self.option_var, value=1,
-                                                 text=texts['option_radio_6'])
-        self.label_1 = ctk.CTkLabel(frame, text=texts['label_1'])
+                                                 text=self.texts['option_radio_6'])
+        self.label_1 = ctk.CTkLabel(frame, text=self.texts['label_1'])
         self.input_1 = ctk.CTkEntry(frame, textvariable=self.letter_separator_var, width=60)
-        self.label_2 = ctk.CTkLabel(frame, text=texts['label_2'])
+        self.label_2 = ctk.CTkLabel(frame, text=self.texts['label_2'])
         self.input_2 = ctk.CTkEntry(frame, textvariable=self.word_separator_var, width=60)
     
     def input_update(self, var_name, index, mode):
-        if var_name == str(self.mode_var):
+        if var_name == str(self.encode_var):
+            value = self.encode_var.get()
+            index = 0
+        elif var_name == str(self.mode_var):
             self.display()
             value = self.mode_var.get()
-            self.update_vars = (value, self.update_vars[1], self.update_vars[2],
-                                self.update_vars[3], self.update_vars[4])
+            index = 1
+        elif var_name == str(self.option_var):
+            value = self.option_var.get()
+            index = 2
         elif var_name == str(self.letter_separator_var):
             var = self.letter_separator_var
             value = var.get()
@@ -62,8 +67,7 @@ class BinaryCode(constants.Stage):
                 value = ' '
             elif value == ' ':
                 var.set(self.texts['space'])
-            self.update_vars = (self.update_vars[0], value, self.update_vars[2],
-                                self.update_vars[3], self.update_vars[4])
+            index = 3
         elif var_name == str(self.word_separator_var):
             var = self.word_separator_var
             value = var.get()
@@ -71,21 +75,13 @@ class BinaryCode(constants.Stage):
                 value = ' '
             elif value == ' ':
                 var.set(self.texts['space'])
-            self.update_vars = (self.update_vars[0], self.update_vars[1], value,
-                                self.update_vars[3], self.update_vars[4])
-        elif var_name == str(self.option_var):
-            value = self.option_var.get()
-            self.update_vars = (self.update_vars[0], self.update_vars[1],
-                                self.update_vars[2], value, self.update_vars[4])
-        else:
-            value = self.encode_var.get()
-            self.update_vars = (self.update_vars[0], self.update_vars[1],
-                                self.update_vars[2], self.update_vars[3], value)
-            
+            index = 4
+
+        self.update_vars[index] = value
         self.update_output(self)
         
     @staticmethod
-    def update(text, mode, letter_separator, word_separator, option, encode):
+    def update(text, constants, encode, mode, option, letter_separator, word_separator):
         if len(text) == 0:
             return (text, ())
         text_original = text
@@ -256,20 +252,20 @@ class BinaryCode(constants.Stage):
             grid_add[0].grid(column=0, row=4, padx=30, pady=15, sticky='WS')
             grid_add[1].grid(column=0, row=5, padx=30, pady=0, sticky='NW')
 
-class Caesar(constants.Stage):
+class Caesar(Stage):
     def __init__(self, update_output):
         super().__init__(update_output)
         self.encode_var = tk.IntVar(value=0)
         self.shift_var = tk.IntVar(value=0)
-        self.update_vars = (0, 0)
+        self.update_vars.extend([0, 0])
 
-    def setup(self, frame, texts):
-        super().setup(frame, texts)
-        self.encode_switch = ctk.CTkSwitch(frame, text=texts['encode'], onvalue=1, offvalue=0,
+    def setup(self, frame, constants):
+        super().setup(self, frame, constants)
+        self.encode_switch = ctk.CTkSwitch(frame, text=self.texts['encode'], onvalue=1, offvalue=0,
                                     variable=self.encode_var)
         self.shift_slider = ctk.CTkSlider(frame, from_=0, to=25, number_of_steps=25, width=375,
                                           variable=self.shift_var)
-        self.label = ctk.CTkLabel(frame, text=texts['label'] + ' ' + str(self.shift_var.get()))
+        self.label = ctk.CTkLabel(frame, text=self.texts['label'] + ' ' + str(self.shift_var.get()))
         self.text = ctk.CTkEntry(frame)
         self.shift_var.trace('w', self.trace_update)
         self.encode_var.trace('w', self.trace_update)
@@ -277,18 +273,21 @@ class Caesar(constants.Stage):
     def trace_update(self, var_name, index, mode):
         if var_name == str(self.shift_var):
             self.label.configure(text=self.texts['label'] + ' ' + str(self.shift_var.get()))
-        self.update_vars = (self.shift_var.get(), self.encode_var.get())
+            self.update_vars[1] = self.shift_var.get()
+        else:
+            self.update_vars[0] = self.encode_var.get()
         self.update_output(self)
 
     @staticmethod
-    def update(text, shift, encode):
+    def update(text, constants, encode, shift):
         if encode:
             shift = 26 - shift
             
         shifted = ''
         for letter in text:
             if letter.lower() in constants.alphabet:
-                shifted_letter = constants.alphabet[(constants.alphabet.index(letter.lower()) + shift) % 26]
+                index = (constants.alphabet.index(letter.lower()) + shift) % 26
+                shifted_letter = constants.alphabet[index]
                 if letter.isupper():
                     shifted_letter = shifted_letter.upper()
                 shifted += shifted_letter

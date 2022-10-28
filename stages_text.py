@@ -1,41 +1,50 @@
-import constants
+from defined import Stage
 import tkinter as tk
 import customtkinter as ctk
 import math
 
-class UpperCase(constants.Stage):
+class UpperCase(Stage):
+    def setup(self, frame, constants):
+        super().setup(self, frame, constants)
+        
     @staticmethod
-    def update(text):
+    def update(text, constants):
         return (text.upper(), ())
     
-class LowerCase(constants.Stage):
+class LowerCase(Stage):
+    def setup(self, frame, constants):
+        super().setup(self, frame, constants)
+        
     @staticmethod
-    def update(text):
+    def update(text, constants):
         return (text.lower(), ())
 
-class Reverse(constants.Stage):
+class Reverse(Stage):
+    def setup(self, frame, constants):
+        super().setup(self, frame, constants)
+        
     @staticmethod
-    def update(text):
+    def update(text, constants):
         return (text[::-1], ())
 
-class Strip(constants.Stage):
+class Strip(Stage):
     def __init__(self, update_output):
         super().__init__(update_output)
         self.spaces_var = tk.IntVar()
         self.spaces_var.set(1)
-        self.update_vars = (True,)
+        self.update_vars.append(1)
         
-    def setup(self, frame, texts):
-        super().setup(frame, texts)
-        self.checkbox = ctk.CTkCheckBox(frame, text=texts['checkbox'], variable=self.spaces_var,
+    def setup(self, frame, constants):
+        super().setup(self, frame, constants)
+        self.checkbox = ctk.CTkCheckBox(frame, text=self.texts['checkbox'], variable=self.spaces_var,
                                         command=self.checkbox_update)
 
     def checkbox_update(self):
-        self.update_vars = (bool(self.spaces_var.get()),)
+        self.update_vars[0] = bool(self.spaces_var.get())
         self.update_output(self)
 
     @staticmethod
-    def update(text, spaces):
+    def update(text, constants, spaces):
         if spaces:
             stripped = ''.join([c for c in text if c.lower() in constants.alphabet])
         else:
@@ -48,24 +57,24 @@ class Strip(constants.Stage):
         self.frame.rowconfigure(0, weight=1)
         self.checkbox.grid(row=0, column=0)
 
-class Block(constants.Stage):
+class Block(Stage):
     def __init__(self, update_output):
         super().__init__(update_output)
         self.block_length_var = tk.StringVar()
         self.block_length_var.set('5')
         self.block_length_var.trace('w', self.input_update)
-        self.update_vars = (5,)
+        self.update_vars.append(5)
 
-    def setup(self, frame, texts):
-        super().setup(frame, texts)
-        self.label = ctk.CTkLabel(frame, text=texts['label'])
+    def setup(self, frame, constants):
+        super().setup(self, frame, constants)
+        self.label = ctk.CTkLabel(frame, text=self.texts['label'])
         self.input = ctk.CTkEntry(frame, textvariable=self.block_length_var, width=30)
         self.input.bind('<MouseWheel>', self.input_scroll)
 
     def input_update(self, var, index, mode):
         value = self.block_length_var.get()
         if value.isnumeric() and value != '0':
-            self.update_vars = (int(value),)
+            self.update_vars[0] = int(value)
         self.update_output(self)
 
     def input_scroll(self, event):
@@ -76,7 +85,7 @@ class Block(constants.Stage):
         self.block_length_var.set(str(new))
 
     @staticmethod
-    def update(text, block_length):
+    def update(text, constants, block_length):
         text = text.replace(' ', '')
         blocked = ''
         if len(text) > 0:
@@ -95,26 +104,26 @@ class Block(constants.Stage):
         self.label.grid(row=0, column=0, sticky='E')
         self.input.grid(row=0, column=1, sticky='W')
 
-class Spaces(constants.Stage):
+class Spaces(Stage):
     def __init__(self, update_output):
         super().__init__(update_output)
         self.complexity_var = tk.IntVar()
         self.complexity_var.set(2)
         self.complexity_var.trace('w', self.input_update)
-        self.update_vars = (2,)
+        self.update_vars.append(2)
 
-    def setup(self, frame, texts):
-        super().setup(frame, texts)
+    def setup(self, frame, constants):
+        super().setup(self, frame, constants)
         self.slider = ctk.CTkSlider(frame, from_=1, to=5, number_of_steps=4, variable=self.complexity_var)
-        self.label = ctk.CTkLabel(frame, text=texts['label'])
+        self.label = ctk.CTkLabel(frame, text=self.texts['label'])
 
     def input_update(self, var, index, mode):
         value = self.complexity_var.get()
-        self.update_vars = (value,)
+        self.update_vars[0] = value
         self.update_output(self)
 
     @staticmethod
-    def update(text, complexity):
+    def update(text, constants, complexity):
         complexity += 1
         
         def cal_score(word):
@@ -156,7 +165,7 @@ class Spaces(constants.Stage):
             string_length = len(string)
             
             best_scores = [None] * (string_length)
-
+            
             for index in range(string_length + 1):
                 for length in range(1, min(constants.max_word_length, string_length - index + 1)):
                     score = cal_score(string[index:index + length])
