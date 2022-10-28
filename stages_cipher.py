@@ -286,7 +286,7 @@ class Caesar(Stage):
         shifted = ''
         for letter in text:
             if letter.lower() in constants.alphabet:
-                index = (constants.alphabet.index(letter.lower()) + shift) % 26
+                index = (constants.alphabet.index(letter.lower()) - shift) % 26
                 shifted_letter = constants.alphabet[index]
                 if letter.isupper():
                     shifted_letter = shifted_letter.upper()
@@ -307,11 +307,14 @@ class Caesar(Stage):
 class Subsitution(Stage):
     def __init__(self, update_output):
         super().__init__(update_output)
+        self.encode_var = tk.IntVar(value=0)
         self.subsitutions = {}
-        self.update_vars.append({})
+        self.update_vars.extend([0, {}])
         
     def setup(self, frame, constants):
         super().setup(self, frame, constants)
+        self.encode_switch = ctk.CTkSwitch(frame, text=self.texts['encode'], onvalue=1, offvalue=0,
+                                           variable=self.encode_var)
         self.input_1 = ctk.CTkEntry(frame, width=60)
         self.label = ctk.CTkLabel(frame, text='->', width=30)
         self.input_2 = ctk.CTkEntry(frame, width=60)
@@ -329,7 +332,13 @@ class Subsitution(Stage):
         self.button_2.bind('<Tab>', lambda event: self.tab_order(3))
         self.button_1.bind('<space>', self.subsitute)
         self.button_2.bind('<space>', self.unsubsitute)
+        self.encode_var.trace('w', self.encode_switch_update)
 
+    def encode_switch_update(self, var, index, mode):
+        self.update_vars[0] = self.encode_var.get()
+        self.update_subsitutions()
+        self.update_output(self)
+    
     def tab_order(self, item_index):
         if item_index == 1:
             self.button_1.focus()
@@ -343,6 +352,7 @@ class Subsitution(Stage):
         elif item_index == 3:
             self.button_2.configure(fg_color=self.constants.theme['color']['button'][self.constants.mode])
             self.input_1.focus()
+            return
 
         return 'break'
 
@@ -357,7 +367,7 @@ class Subsitution(Stage):
                 for i, c in enumerate(input_1):
                     self.subsitutions[c] = ''
                 
-        self.update_vars[0] = self.subsitutions
+        self.update_vars[1] = self.subsitutions
         self.update_subsitutions()
         self.update_output(self)
 
@@ -374,12 +384,15 @@ class Subsitution(Stage):
                     if c in self.subsitutions:
                         del self.subsitutions[c]
                     
-        self.update_vars[0] = self.subsitutions
+        self.update_vars[1] = self.subsitutions
         self.update_subsitutions()
         self.update_output(self)
     
     @staticmethod
-    def update(text, constants, subsitutions):
+    def update(text, constants, encode, subsitutions):
+        if encode:
+            subsitutions = {v: k for k, v in subsitutions.items()}
+
         result = ''
         for c in text:
             if c in subsitutions:
@@ -391,11 +404,13 @@ class Subsitution(Stage):
 
     def update_subsitutions(self):
         self.subsitutions = dict(sorted(self.subsitutions.items(), key=self.subsitutions_sort_key))
+        if self.encode_var.get(): arrow = '<-'
+        else: arrow = '->'
         
         formatted = ''
         for k in self.subsitutions:
             v = self.subsitutions[k]
-            formatted += f'\'{k}\' -> \'{v}\'\n'
+            formatted += f'\'{k}\' {arrow} \'{v}\'\n'
 
         self.textbox.configure(state='normal')
         self.textbox.delete(1.0, 'end')
@@ -422,3 +437,4 @@ class Subsitution(Stage):
         self.button_2.grid(row=1, column=4, padx=20, pady=12, sticky='N')
         self.textbox.grid(row=0, column=5, rowspan=2, pady=120, sticky='NS')
         self.scrollbar.grid(row=0, column=6, rowspan=2, sticky='NSW')
+        self.encode_switch.grid(row=1, column=5, padx=15, pady=15, sticky='SE')

@@ -75,6 +75,7 @@
 	"stage_subsitution": {
 		"name": "Subsitution",
 		"button_1": "Subsitute",
-		"button_2": "Unsubsitute"
+		"button_2": "Unsubsitute",
+		"encode": "Encode"
 	}
 }
