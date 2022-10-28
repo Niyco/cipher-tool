@@ -303,3 +303,122 @@ class Caesar(Stage):
         self.encode_switch.grid(row=1, column=0, padx=15, pady=15, sticky='SE')
         self.label.grid(row=0, column=0, pady=20, sticky='S')
         self.shift_slider.grid(row=1, column=0, sticky='N')
+
+class Subsitution(Stage):
+    def __init__(self, update_output):
+        super().__init__(update_output)
+        self.subsitutions = {}
+        self.update_vars.append({})
+        
+    def setup(self, frame, constants):
+        super().setup(self, frame, constants)
+        self.input_1 = ctk.CTkEntry(frame, width=60)
+        self.label = ctk.CTkLabel(frame, text='->', width=30)
+        self.input_2 = ctk.CTkEntry(frame, width=60)
+        self.button_1 = ctk.CTkButton(frame, text=self.texts['button_1'], width=110)
+        self.button_2 = ctk.CTkButton(frame, text=self.texts['button_2'], width=110)
+        self.textbox = tk.Text(frame, bd=0, bg=self.constants.theme['color']['entry'][self.constants.mode],
+                               fg=constants.theme['color']['text'][self.constants.mode], width=40, state='disabled',
+                               insertbackground=self.constants.theme['color']['text'][self.constants.mode],
+                               selectbackground=self.constants.theme['color']['entry'][self.constants.mode])
+        self.scrollbar = ctk.CTkScrollbar(frame, command=self.textbox.yview, hover=False)
+        self.textbox.configure(yscrollcommand=self.scrollbar.set)
+
+        self.input_2.bind('<Tab>', lambda event: self.tab_order(1))
+        self.button_1.bind('<Tab>', lambda event: self.tab_order(2))
+        self.button_2.bind('<Tab>', lambda event: self.tab_order(3))
+        self.button_1.bind('<space>', self.subsitute)
+        self.button_2.bind('<space>', self.unsubsitute)
+
+    def tab_order(self, item_index):
+        if item_index == 1:
+            self.button_1.focus()
+            self.button_1.configure(fg_color=self.constants.theme['color']['button_hover'][self.constants.mode])
+        
+        elif item_index == 2:
+            self.button_2.focus()
+            self.button_1.configure(fg_color=self.constants.theme['color']['button'][self.constants.mode])
+            self.button_2.configure(fg_color=self.constants.theme['color']['button_hover'][self.constants.mode])
+        
+        elif item_index == 3:
+            self.button_2.configure(fg_color=self.constants.theme['color']['button'][self.constants.mode])
+            self.input_1.focus()
+
+        return 'break'
+
+    def subsitute(self, event):
+        input_1 = self.input_1.get()
+        input_2 = self.input_2.get()
+        if input_1 != input_2:
+            if len(input_1) == len(input_2):
+                for i, c in enumerate(input_1):
+                    self.subsitutions[c] = input_2[i]
+            elif input_2 == '':
+                for i, c in enumerate(input_1):
+                    self.subsitutions[c] = ''
+                
+        self.update_vars[0] = self.subsitutions
+        self.update_subsitutions()
+        self.update_output(self)
+
+    def unsubsitute(self, event):
+        input_1 = self.input_1.get()
+        input_2 = self.input_2.get()
+        if input_1 != input_2:
+            if len(input_1) == len(input_2):
+                for i, c in enumerate(input_1):
+                    if c in self.subsitutions and input_2[i] in self.subsitutions:
+                        del self.subsitutions[c]
+            elif input_2 == '':
+                for i, c in enumerate(input_1):
+                    if c in self.subsitutions:
+                        del self.subsitutions[c]
+                    
+        self.update_vars[0] = self.subsitutions
+        self.update_subsitutions()
+        self.update_output(self)
+    
+    @staticmethod
+    def update(text, constants, subsitutions):
+        result = ''
+        for c in text:
+            if c in subsitutions:
+                result += subsitutions[c]
+            else:
+                result += c
+        
+        return (result, ())
+
+    def update_subsitutions(self):
+        self.subsitutions = dict(sorted(self.subsitutions.items(), key=self.subsitutions_sort_key))
+        
+        formatted = ''
+        for k in self.subsitutions:
+            v = self.subsitutions[k]
+            formatted += f'\'{k}\' -> \'{v}\'\n'
+
+        self.textbox.configure(state='normal')
+        self.textbox.delete(1.0, 'end')
+        self.textbox.insert(1.0, formatted)
+        self.textbox.configure(state='disabled')
+
+    def subsitutions_sort_key(self, element):
+        key = element[0]
+        if key.lower() in self.constants.alphabet:
+            return self.constants.alphabet.index(key.lower())
+        else:
+            return -1
+
+    def display(self):
+        self.frame.rowconfigure(0, weight=1)
+        self.frame.rowconfigure(1, weight=1)
+        self.frame.columnconfigure(0, minsize=25)
+        self.frame.columnconfigure(5, weight=1)
+        
+        self.input_1.grid(row=0, column=1, rowspan=2, padx=10)
+        self.label.grid(row=0, column=2, rowspan=2)
+        self.input_2.grid(row=0, column=3, rowspan=2, padx=10)
+        self.button_1.grid(row=0, column=4, padx=20, pady=12, sticky='S')
+        self.button_2.grid(row=1, column=4, padx=20, pady=12, sticky='N')
+        self.textbox.grid(row=0, column=5, rowspan=2, pady=120, sticky='NS')
+        self.scrollbar.grid(row=0, column=6, rowspan=2, sticky='NSW')

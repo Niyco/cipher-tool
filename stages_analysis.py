@@ -41,9 +41,10 @@ class Frequency(Stage):
         self.radio_3 = ctk.CTkRadioButton(frame, variable=self.mode_var, value=2, text=self.texts['radio_3'])
         self.checkbox = ctk.CTkCheckBox(frame, variable=self.alpha_ex_var, text=self.texts['checkbox'])
         self.textbox = tk.Text(frame, bd=0, bg=self.constants.theme['color']['entry'][self.constants.mode],
-                               fg=constants.theme['color']['text'][self.constants.mode], width=40,
-                               insertbackground=self.constants.theme['color']['text'][self.constants.mode])
-        self.scrollbar = ctk.CTkScrollbar(frame, command=self.textbox.yview)
+                               fg=constants.theme['color']['text'][self.constants.mode], width=40, state='disabled',
+                               insertbackground=self.constants.theme['color']['text'][self.constants.mode],
+                               selectbackground=self.constants.theme['color']['entry'][self.constants.mode])
+        self.scrollbar = ctk.CTkScrollbar(frame, command=self.textbox.yview, hover=False)
         self.textbox.configure(yscrollcommand=self.scrollbar.set)
 
     def input_update(self, var, index, mode):
@@ -79,9 +80,11 @@ class Frequency(Stage):
         for k in frequencies:
             v = frequencies[k]
             formatted += f'\'{k}\': {round(v * 100, 2)}%\n'
-            
+
+        self.textbox.configure(state='normal')
         self.textbox.delete(1.0, 'end')
         self.textbox.insert(1.0, formatted)
+        self.textbox.configure(state='disabled')
 
     def display(self):
         self.frame.columnconfigure(0, weight=0)
