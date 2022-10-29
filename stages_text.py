@@ -72,6 +72,7 @@ class Block(Stage):
         self.input.bind('<MouseWheel>', self.input_scroll)
 
     def input_update(self, var, index, mode):
+        print(1)
         value = self.block_length_var.get()
         if value.isnumeric() and value != '0':
             self.update_vars[0] = int(value)

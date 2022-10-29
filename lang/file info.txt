@@ -3,4 +3,4 @@ Word frequencies taken from the python wordfreq library (https://pypi.org/projec
 	-0 cB is 100%, -100 cB is 10%, -200 cB is 1%, ect
 	-Lists are sorted alphabetically
 	-The index of each list is the negative of its frequency
-Letter frequencies taken from http://mathcenter.oxford.emory.edu/site/math125/englishLetterFreqs/
+Monogram and bigram frequencies taken from practical cryptography (http://practicalcryptography.com/cryptanalysis/letter-frequencies-various-languages/english-letter-frequencies/)

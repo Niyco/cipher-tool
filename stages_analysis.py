@@ -96,7 +96,7 @@ class Frequency(Stage):
         self.radio_3.grid(column=0, row=2, padx=30, pady=6, sticky='W')
         self.checkbox.grid(column=0, row=3, padx=25, pady=15, sticky='NW')
         self.textbox.grid(column=1, row=0, pady=80, rowspan=4, sticky='NS')
-        self.scrollbar.grid(column=2, row=0, rowspan=4, sticky='NSW')
+        self.scrollbar.grid(column=2, row=0, pady=80, rowspan=4, sticky='NSW')
 
 class IoC(Stage):
     def setup(self, frame, constants):
