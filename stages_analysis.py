@@ -138,3 +138,11 @@ class IoC(Stage):
         self.frame.columnconfigure(0, weight=1)
         self.frame.rowconfigure(0, weight=1)
         self.label.grid(row=0, column=0)
+
+class SubstitutionAnalysis(Stage):
+    def setup(self, frame, constants):
+        super().setup(self, frame, constants)
+
+    @staticmethod
+    def update(text, constants):
+        return ()

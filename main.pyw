@@ -142,11 +142,11 @@ if __name__ == '__main__':
                       fg_color=constants.theme['color']['deselected'][constants.mode],
                       hover_color=constants.theme['color']['button'][constants.mode],
                       corner_radius=22).place(x=174, y=14)
-        stages_canvas = tk.Canvas(root, bg=bg_color, highlightthickness=0, width=210)
+        stages_canvas = tk.Canvas(root, bg=bg_color, highlightthickness=0, width=230)
         stages_canvas.columnconfigure(0, weight=1)
         stages_canvas.grid(row=3, column=1, sticky='NESW')
         stages_canvas.bind('<MouseWheel>', stage_scroll)
-        stages_canvas.create_rectangle(205, 0, 205, 0,
+        stages_canvas.create_rectangle(225, 0, 225, 0,
                                        outline=constants.theme['color']['deselected'][constants.mode])
         stage_frame = ctk.CTkFrame(root, fg_color=named_to_hex(constants.theme['color']['entry'][constants.mode]))
         stage_frame.grid(row=2, column=0, rowspan=2, sticky='NESW')
@@ -308,7 +308,7 @@ if __name__ == '__main__':
         toolbar_stages = []
         x = 0
         for stage in defined_stages[button]:
-            x = 79 + 180 * (len(toolbar_stages) // 2)
+            x = 89 + 200 * (len(toolbar_stages) // 2)
             y = 19 + 36 * (len(toolbar_stages) % 2)
             
             image = toolbar_canvas.create_image(x, y, image=toolbar_stage_image)
@@ -354,7 +354,7 @@ if __name__ == '__main__':
             widget.place(x=widget.winfo_x(), y=widget.winfo_y() + stages_pos - new_pos)
         stages_pos = new_pos
         start, end = cal_scrollbar(stages_canvas.winfo_height(), stages_last, stages_pos)
-        stages_canvas.coords(1, 205, start, 205, end)
+        stages_canvas.coords(1, 225, start, 225, end)
 
     def cal_scrollbar(width, maximum, pos):
         if maximum <= width:
@@ -685,7 +685,7 @@ if __name__ == '__main__':
         loading_animation_label.grab_set()
         loading = True
         update_constants = False
-        after = loading_animation_label.after(400, start_loading_animation, 0, True)
+        after = loading_animation_label.after(250, start_loading_animation, 0, True)
         update_queue_in.put(updates)
         while True:
             if update_queue_out.empty():
@@ -807,6 +807,7 @@ if __name__ == '__main__':
     create_stage(Length, 1)
     create_stage(Frequency, 1)
     create_stage(IoC, 1)
+    create_stage(SubstitutionAnalysis, 1)
 
     create_stage(BinaryCode, 2)
     create_stage(Caesar, 2)
@@ -817,5 +818,7 @@ if __name__ == '__main__':
 
     add_stage(0, 'Input', Input(update_output))
     switch_stage(0, unselect=False)
+    if constants.threaded:
+        threaded_update([('', constants)])
     
     root.mainloop()

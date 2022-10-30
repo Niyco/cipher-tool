@@ -91,7 +91,7 @@ class Constants:
 
         self.letter_frequencies = freq_data['letters']
         self.language_ioc = sum([self.letter_frequencies[x] ** 2 for x in self.letter_frequencies])
-        self.alphabet = list(self.letter_frequencies.keys())
+        self.alphabet = list(sorted(self.letter_frequencies.keys()))
         self.min_word_frequency = 10 ** ((0 - len(freq_data['words']) + 1) / 100)
         self.max_word_length = 0
         self.word_frequencies = {}

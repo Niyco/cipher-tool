@@ -50,6 +50,9 @@
 		"english_ioc": "English:",
 		"random_ioc": "Random:"
 	},
+	"stage_substitutionanalysis": {
+		"name": "Substitution Analysis"
+	},
 	"stage_binarycode": {
 		"name": "Binary Codes",
 		"cipher_radio_1": "Morse Code",
@@ -76,6 +79,7 @@
 		"name": "Substitution",
 		"button_1": "Substitute",
 		"button_2": "Unsubstitute",
+		"keyword": "Keyword",
 		"encode": "Encode"
 	}
 }

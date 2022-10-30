@@ -1,6 +1,8 @@
 from defined import Stage
 import tkinter as tk
 import customtkinter as ctk
+import pickle
+import base64
 
 class BinaryCode(Stage):
     def __init__(self, update_output):
@@ -319,44 +321,99 @@ class Substitution(Stage):
         self.button_1 = ctk.CTkButton(frame, text=self.texts['button_1'], width=110)
         self.button_2 = ctk.CTkButton(frame, text=self.texts['button_2'], width=110)
         self.textbox = tk.Text(frame, bd=0, bg=self.constants.theme['color']['entry'][self.constants.mode],
-                               fg=constants.theme['color']['text'][self.constants.mode], width=40, state='disabled',
+                               fg=constants.theme['color']['text'][self.constants.mode], width=12, state='disabled',
                                insertbackground=self.constants.theme['color']['text'][self.constants.mode],
                                selectbackground=self.constants.theme['color']['entry'][self.constants.mode])
-        self.scrollbar = ctk.CTkScrollbar(frame, command=self.textbox.yview, hover=False)
+        self.scrollbar = ctk.CTkScrollbar(frame, command=self.textbox.yview, hover=False, height=350)
         self.textbox.configure(yscrollcommand=self.scrollbar.set)
+        self.keyword = ctk.CTkButton(frame, text=self.texts['keyword'], command=self.get_keyword)
 
+        self.input_1.bind('<Tab>', lambda event: self.tab_order(0))
         self.input_2.bind('<Tab>', lambda event: self.tab_order(1))
         self.button_1.bind('<Tab>', lambda event: self.tab_order(2))
         self.button_2.bind('<Tab>', lambda event: self.tab_order(3))
         self.button_1.bind('<space>', self.subsitute)
         self.button_2.bind('<space>', self.unsubsitute)
+        self.textbox.bind('<Control-c>', self.copy)
+        self.textbox.bind('<Control-v>', self.paste)
         self.encode_var.trace('w', self.encode_switch_update)
+        self.update_substitutions()
 
     def encode_switch_update(self, var, index, mode):
         self.update_vars[0] = self.encode_var.get()
         self.update_substitutions()
+        self.input_1.configure(state='normal')
+        self.update_output(self)
+
+    def get_keyword(self):
+        dialog = ctk.CTkInputDialog(master=None, text=self.texts['keyword'] + ':',
+                                              title=self.texts['keyword'])
+        keyword = dialog.get_input()
+        keyword = ''.join(list({x.lower(): None for x in keyword if x.lower() in self.constants.alphabet}))
+        
+        key_index = 0
+        value_index = 0
+        self.substitutions = {}
+        while key_index < len(self.constants.alphabet):
+            value_index = value_index % 26
+            
+            if value_index < len(keyword):
+                self.substitutions[self.constants.alphabet[key_index].upper()] = keyword[value_index]
+            else:
+                if self.constants.alphabet[value_index] in self.substitutions.values():
+                    value_index += 1
+                    continue
+                else:
+                    self.substitutions[self.constants.alphabet[key_index].upper()] = self.constants.alphabet[value_index]
+
+            key_index += 1
+            value_index += 1
+                    
+
+        self.update_vars[1] = self.substitutions
+        self.update_substitutions()
         self.update_output(self)
     
-    def tab_order(self, item_index):
-        if item_index == 1:
-            self.button_1.focus()
-            self.button_1.configure(fg_color=self.constants.theme['color']['button_hover'][self.constants.mode])
+    def tab_order(self, index):
+        if index == 0:
+            if self.encode_var.get():
+                self.button_1.focus()
+                self.button_1.configure(fg_color=self.constants.theme['color']['button_hover'][self.constants.mode])
+            else:
+                self.input_2.focus()
+                return
+            
+        elif index == 1:
+            if self.encode_var.get():
+                self.input_1.configure(state='normal')
+                self.input_1.focus()
+                return
+            else:
+                self.button_1.focus()
+                self.button_1.configure(fg_color=self.constants.theme['color']['button_hover'][self.constants.mode])
         
-        elif item_index == 2:
+        elif index == 2:
             self.button_2.focus()
             self.button_1.configure(fg_color=self.constants.theme['color']['button'][self.constants.mode])
             self.button_2.configure(fg_color=self.constants.theme['color']['button_hover'][self.constants.mode])
         
-        elif item_index == 3:
-            self.button_2.configure(fg_color=self.constants.theme['color']['button'][self.constants.mode])
-            self.input_1.focus()
-            return
+        elif index == 3:
+            if self.encode_var.get():
+                self.input_1.configure(state='disabled')
+                self.input_2.focus()
+                self.button_2.configure(fg_color=self.constants.theme['color']['button'][self.constants.mode])
+                return
+            else:
+                self.input_1.focus()
+                self.button_2.configure(fg_color=self.constants.theme['color']['button'][self.constants.mode])
+                return
 
         return 'break'
 
     def subsitute(self, event):
         input_1 = self.input_1.get()
         input_2 = self.input_2.get()
+            
         if input_1 != input_2:
             if len(input_1) == len(input_2):
                 for i, c in enumerate(input_1):
@@ -372,10 +429,11 @@ class Substitution(Stage):
     def unsubsitute(self, event):
         input_1 = self.input_1.get()
         input_2 = self.input_2.get()
+            
         if input_1 != input_2:
             if len(input_1) == len(input_2):
                 for i, c in enumerate(input_1):
-                    if c in self.substitutions and input_2[i] in self.substitutions:
+                    if c in self.substitutions and input_2[i] in self.substitutions.values():
                         del self.substitutions[c]
             elif input_2 == '':
                 for i, c in enumerate(input_1):
@@ -385,6 +443,20 @@ class Substitution(Stage):
         self.update_vars[1] = self.substitutions
         self.update_substitutions()
         self.update_output(self)
+
+    def copy(self, event):
+        value = base64.b64encode(pickle.dumps(self.substitutions))
+        self.frame.master.clipboard_clear()
+        self.frame.master.clipboard_append(value.decode('utf-8'))
+        self.frame.master.update()
+        
+    def paste(self, event):
+        try:
+            self.substitutions = pickle.loads(base64.b64decode(self.frame.master.clipboard_get()))
+            self.update_substitutions()
+            self.update_output(self)
+        except pickle.UnpicklingError:
+            pass
     
     @staticmethod
     def update(text, constants, encode, substitutions):
@@ -401,19 +473,25 @@ class Substitution(Stage):
         return (result, ())
 
     def update_substitutions(self):
-        self.substitutions = dict(sorted(self.substitutions.items(), key=self.substitutions_sort_key))
-        if self.encode_var.get(): arrow = '<-'
-        else: arrow = '->'
-        
-        formatted = ''
-        for k in self.substitutions:
-            v = self.substitutions[k]
-            formatted += f'\'{k}\' {arrow} \'{v}\'\n'
+        substitutions = self.substitutions.copy()
+
+        if self.encode_var.get():
+            arrow = '<-'
+        else:
+            arrow = '->'
+            
+        for letter in self.constants.alphabet:
+            if letter.upper() not in substitutions:
+                substitutions[letter.upper()] = ''
+        substitutions = dict(sorted(substitutions.items(), key=self.substitutions_sort_key))
+
+        formatted = '\n'.join([f'\'{k}\' {arrow} \'{v}\'' for k, v in substitutions.items()])
 
         self.textbox.configure(state='normal')
         self.textbox.delete(1.0, 'end')
         self.textbox.insert(1.0, formatted)
         self.textbox.configure(state='disabled')
+        self.label.configure(text=arrow)
 
     def substitutions_sort_key(self, element):
         key = element[0]
@@ -425,14 +503,18 @@ class Substitution(Stage):
     def display(self):
         self.frame.rowconfigure(0, weight=1)
         self.frame.rowconfigure(1, weight=1)
-        self.frame.columnconfigure(0, minsize=25)
+        self.frame.columnconfigure(0, minsize=15)
         self.frame.columnconfigure(5, weight=1)
         
-        self.input_1.grid(row=0, column=1, rowspan=2, padx=10)
+        self.input_1.grid(row=0, column=1, rowspan=2, padx=15)
         self.label.grid(row=0, column=2, rowspan=2)
         self.input_2.grid(row=0, column=3, rowspan=2, padx=10)
         self.button_1.grid(row=0, column=4, padx=20, pady=12, sticky='S')
         self.button_2.grid(row=1, column=4, padx=20, pady=12, sticky='N')
-        self.textbox.grid(row=0, column=5, rowspan=2, pady=120, sticky='NS')
-        self.scrollbar.grid(row=0, column=6, rowspan=2, pady=120, sticky='NSE')
+        self.keyword.grid(row=1, column=1, columnspan=3)
+        self.textbox.grid(row=0, column=5, rowspan=2, columnspan=2, pady=120, sticky='W')
+        self.scrollbar.grid(row=0, column=6, rowspan=2, pady=120, sticky='E')
         self.encode_switch.grid(row=1, column=6, padx=15, pady=15, sticky='SE')
+
+        self.button_1.configure(fg_color=self.constants.theme['color']['button'][self.constants.mode])
+        self.button_2.configure(fg_color=self.constants.theme['color']['button'][self.constants.mode])
