@@ -16,6 +16,7 @@ Feature requests or bug reports are welcome, but any specifc code won't be used 
 * Length
 * Frequency Analysis
 * Index of Coincidence
+* Substitusion Finder
 ## Text manipulation tools:
 * Uppercase
 * Lowercase
