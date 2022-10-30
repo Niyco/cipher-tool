@@ -453,6 +453,7 @@ class Substitution(Stage):
     def paste(self, event):
         try:
             self.substitutions = pickle.loads(base64.b64decode(self.frame.master.clipboard_get()))
+            self.update_vars[1] = self.substitutions
             self.update_substitutions()
             self.update_output(self)
         except pickle.UnpicklingError:
@@ -512,7 +513,7 @@ class Substitution(Stage):
         self.button_1.grid(row=0, column=4, padx=20, pady=12, sticky='S')
         self.button_2.grid(row=1, column=4, padx=20, pady=12, sticky='N')
         self.keyword.grid(row=1, column=1, columnspan=3)
-        self.textbox.grid(row=0, column=5, rowspan=2, columnspan=2, pady=120, sticky='W')
+        self.textbox.grid(row=0, column=5, rowspan=2, columnspan=2, pady=120)
         self.scrollbar.grid(row=0, column=6, rowspan=2, pady=120, sticky='E')
         self.encode_switch.grid(row=1, column=6, padx=15, pady=15, sticky='SE')
 

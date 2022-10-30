@@ -50,8 +50,11 @@
 		"english_ioc": "English:",
 		"random_ioc": "Random:"
 	},
-	"stage_substitutionanalysis": {
-		"name": "Substitution Analysis"
+	"stage_substitutionfinder": {
+		"name": "Substitution Finder",
+		"results_label": "Results:",
+		"iterations_label": "Iterations:",
+		"update_button": "Update"
 	},
 	"stage_binarycode": {
 		"name": "Binary Codes",
@@ -76,7 +79,7 @@
 		"encode": "Encode"
 	},
 	"stage_substitution": {
-		"name": "Substitution",
+		"name": "Simple Substitution",
 		"button_1": "Substitute",
 		"button_2": "Unsubstitute",
 		"keyword": "Keyword",

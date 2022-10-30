@@ -696,6 +696,7 @@ if __name__ == '__main__':
                 returns = update_queue_out.get()
                 break
         loading_animation_label.grab_release()
+        loading = False
         loading_animation_label.after_cancel(after)
         
         return returns
@@ -720,6 +721,11 @@ if __name__ == '__main__':
             for widget in stage_frame.winfo_children():
                 if widget != loading_animation_label:
                     widget.grid_forget()
+            for i in range(1, 10):
+                stage_frame.rowconfigure(i, weight=0, minsize=0)
+                stage_frame.columnconfigure(i, weight=0, minsize=0)
+            stage_frame.rowconfigure(0, weight=1)
+            stage_frame.columnconfigure(0, weight=1)
             loading_animation_label.grid()
             start_loading_animation(frame)
         elif loading:
@@ -727,6 +733,8 @@ if __name__ == '__main__':
             root.after(100, start_loading_animation, (frame + 1) % 8)
         else:
             loading_animation_label.grid_forget()
+            stage_frame.rowconfigure(0, weight=0)
+            stage_frame.columnconfigure(0, weight=0)
             current_stages[selected_stage][0].display()
     
     def copy_output():
@@ -807,7 +815,7 @@ if __name__ == '__main__':
     create_stage(Length, 1)
     create_stage(Frequency, 1)
     create_stage(IoC, 1)
-    create_stage(SubstitutionAnalysis, 1)
+    create_stage(SubstitutionFinder, 1)
 
     create_stage(BinaryCode, 2)
     create_stage(Caesar, 2)

@@ -124,7 +124,7 @@ class Spaces(Stage):
         self.update_output(self)
 
     @staticmethod
-    def update(text, constants, complexity):
+    def update(text, constants, complexity, return_score=False):
         complexity += 1
         
         def cal_score(word):
@@ -161,6 +161,7 @@ class Spaces(Stage):
             return max(paths, key=lambda e: e[1])[0]
 
         final_string = ''
+        score = 0
         for string in text.split(' '):
             string = ''.join([c for c in string if c.lower() in constants.alphabet + ['\'']])
             string_length = len(string)
@@ -183,10 +184,12 @@ class Spaces(Stage):
             while index < string_length:
                 path = cal_best_path(index, min(complexity, string_length - index))
                 split_string += string[index:index + best_scores[index][path[0]][1]] + ' '
+                score += best_scores[index][path[0]][0]
                 index += best_scores[index][path[0]][1]
 
             final_string += split_string
-                    
+        if return_score:
+            return score
         return (final_string, ())
 
     def display(self):

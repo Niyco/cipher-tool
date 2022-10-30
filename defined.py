@@ -67,6 +67,7 @@ class Constants:
     letter_frequencies = None
     language_ioc = None
     alphabet = None
+    bigram_frequencies = None
     min_word_frequency = None
     max_word_length = None
     word_frequencies = None
@@ -92,6 +93,7 @@ class Constants:
         self.letter_frequencies = freq_data['letters']
         self.language_ioc = sum([self.letter_frequencies[x] ** 2 for x in self.letter_frequencies])
         self.alphabet = list(sorted(self.letter_frequencies.keys()))
+        self.bigram_frequencies = freq_data['bigrams']
         self.min_word_frequency = 10 ** ((0 - len(freq_data['words']) + 1) / 100)
         self.max_word_length = 0
         self.word_frequencies = {}
