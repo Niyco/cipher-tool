@@ -10,6 +10,8 @@ Feature requests or bug reports are welcome, but any specifc code won't be used 
 * Baconian
 * Binary
 * Baudot
+* Caesar
+* Substitution
 ## Analysis tools:
 * Length
 * Frequency Analysis
