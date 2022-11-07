@@ -225,7 +225,7 @@ class BinaryCode(Stage):
 
     def display(self):
         self.frame.columnconfigure(0, weight=1, minsize=250)
-        self.frame.columnconfigure(3, weight=1)
+        self.frame.columnconfigure(3, weight=0)
         self.frame.rowconfigure(0, weight=1)
         self.frame.rowconfigure(4, minsize=65)
         self.frame.rowconfigure(5, minsize=65)
@@ -234,11 +234,11 @@ class BinaryCode(Stage):
         self.cipher_radio_2.grid(column=0, row=1, padx=30, pady=6, sticky='W')
         self.cipher_radio_3.grid(column=0, row=2, padx=30, pady=6, sticky='W')
         self.cipher_radio_4.grid(column=0, row=3, padx=30, pady=6, sticky='W')
-        self.label_1.grid(column=1, row=1, sticky='E')
+        self.label_1.grid(column=0, row=1, columnspan=2, sticky='E')
         self.input_1.grid(column=2, row=1, sticky='W')
-        self.label_2.grid(column=1, row=2, sticky='E')
+        self.label_2.grid(column=0, row=2, columnspan=2, sticky='E')
         self.input_2.grid(column=2, row=2, sticky='W')
-        self.encode.grid(column=3, row=6, padx=15, pady=15, sticky='SE')
+        self.encode.grid(column=2, row=6, padx=15, pady=15, sticky='SE')
 
         options_radios = [self.option_radio_1, self.option_radio_2, self.option_radio_3,
                           self.option_radio_4, self.option_radio_5, self.option_radio_6]
@@ -316,7 +316,7 @@ class Substitution(Stage):
         self.encode_switch = ctk.CTkSwitch(frame, text=self.texts['encode'], onvalue=1, offvalue=0,
                                            variable=self.encode_var)
         self.input_1 = ctk.CTkEntry(frame, width=60)
-        self.label = ctk.CTkLabel(frame, text='->', width=30)
+        self.label = ctk.CTkLabel(frame, text='->', width=20)
         self.input_2 = ctk.CTkEntry(frame, width=60)
         self.button_1 = ctk.CTkButton(frame, text=self.texts['button_1'], width=110)
         self.button_2 = ctk.CTkButton(frame, text=self.texts['button_2'], width=110)
@@ -505,13 +505,14 @@ class Substitution(Stage):
         self.frame.rowconfigure(0, weight=1)
         self.frame.rowconfigure(1, weight=1)
         self.frame.columnconfigure(0, minsize=15)
+        self.frame.columnconfigure(4, minsize=120)
         self.frame.columnconfigure(5, weight=1)
         
         self.input_1.grid(row=0, column=1, rowspan=2, padx=15)
         self.label.grid(row=0, column=2, rowspan=2)
         self.input_2.grid(row=0, column=3, rowspan=2, padx=10)
-        self.button_1.grid(row=0, column=4, padx=20, pady=12, sticky='S')
-        self.button_2.grid(row=1, column=4, padx=20, pady=12, sticky='N')
+        self.button_1.grid(row=0, column=4, pady=12, sticky='S')
+        self.button_2.grid(row=1, column=4, pady=12, sticky='N')
         self.keyword.grid(row=1, column=1, columnspan=3)
         self.textbox.grid(row=0, column=5, rowspan=2, columnspan=2, pady=120)
         self.scrollbar.grid(row=0, column=6, rowspan=2, pady=120, sticky='E')
@@ -519,3 +520,11 @@ class Substitution(Stage):
 
         self.button_1.configure(fg_color=self.constants.theme['color']['button'][self.constants.mode])
         self.button_2.configure(fg_color=self.constants.theme['color']['button'][self.constants.mode])
+
+class Affine(Stage):
+    def __init__(self, update_output):
+        super().__init__(update_output)
+         
+
+    def setup(self, frame, constants):
+        super().setup(self, frame, constants)

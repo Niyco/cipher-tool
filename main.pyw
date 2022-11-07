@@ -653,7 +653,8 @@ if __name__ == '__main__':
         if updating_stages:
             search_item = next(k for k, v in stage_positions.items() if v == updating_stages[0][0])
             to_search = list(stage_positions.values())
-            updating_stages.insert(0, ([x for x in to_search if x < search_item and x in results][-1], True))
+            stage = [x for x in to_search if x < search_item and x in results][-1]
+            updating_stages.insert(0, (stage_positions[stage], True))
 
             if update_constants:
                 updates = [(results[updating_stages[0][0]], constants)]
@@ -669,6 +670,7 @@ if __name__ == '__main__':
                 returns = threaded_update(updates)
             else:
                 returns = unthreaded_update(updates)
+            
             for i, v in enumerate(updating_stages[1:]):
                 if v[1]:
                     results[v[0]] = returns[i][0]

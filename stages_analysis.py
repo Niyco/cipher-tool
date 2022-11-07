@@ -266,7 +266,7 @@ class SubstitutionFinder(Stage):
             for bigram in bigrams:
                 sample_alphabet.update(bigram[0])
 
-            candidates = [best_scores(3)[0]]
+            candidates = best_scores(3)[0]
             candidates.extend(best_scores(3)[0])
 
             scores = []
@@ -278,12 +278,8 @@ class SubstitutionFinder(Stage):
                     else:
                         decoded += letter
                 scores.append(spaces_function(decoded, constants, 2, return_score=True))
-
-            best_subs = candidates[scores.index(max(scores))]
-
-            print(candidates)
-            print(best_subs)
             
+            best_subs = candidates[scores.index(max(scores))]
             return (best_subs,)
         
         else:

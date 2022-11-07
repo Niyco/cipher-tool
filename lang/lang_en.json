@@ -54,7 +54,7 @@
 		"name": "Substitution Finder",
 		"results_label": "Results:",
 		"iterations_label": "Iterations:",
-		"update_button": "Update"
+		"update_button": "Calculate"
 	},
 	"stage_binarycode": {
 		"name": "Binary Codes",
