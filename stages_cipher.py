@@ -1,6 +1,7 @@
 from defined import Stage
 import tkinter as tk
 import customtkinter as ctk
+import unicodedata
 import pickle
 import base64
 
@@ -524,7 +525,54 @@ class Substitution(Stage):
 class Affine(Stage):
     def __init__(self, update_output):
         super().__init__(update_output)
-         
+        self.alpha_var = tk.IntVar(value=0)
+        self.beta_var = tk.IntVar(value=0)
+        self.update_vars.extend([0, 0])
 
     def setup(self, frame, constants):
         super().setup(self, frame, constants)
+        self.alpha_label = ctk.CTkLabel(frame)
+        self.beta_label = ctk.CTkLabel(frame)
+        self.alpha_slider = ctk.CTkSlider(frame, from_=0, to=11, number_of_steps=11, width=375,
+                                          variable=self.alpha_var)
+        self.beta_slider = ctk.CTkSlider(frame, from_=0, to=25, number_of_steps=25, width=375,
+                                         variable=self.beta_var)
+        self.alpha_var.trace('w', self.input_update)
+        self.beta_var.trace('w', self.input_update)
+        self.input_update(str(self.alpha_var), False, False, update=False)
+        self.input_update(str(self.beta_var), False, False, update=False)
+   
+    def input_update(self, var, index, mode, update=True):
+        if var == str(self.alpha_var):
+            self.update_vars[0] = list(self.constants.inverses.keys())[self.alpha_var.get()]
+            self.alpha_label.configure(text=self.texts['alpha_label'] + ' ' + str(self.update_vars[0]))
+        else:
+            self.update_vars[1] = self.beta_var.get()
+            self.beta_label.configure(text=self.texts['beta_label'] + ' ' + str(self.update_vars[1]))
+        
+        if update:
+            self.update_output(self)
+
+    @staticmethod
+    def update(text, constants, alpha, beta):
+        shifted = ''
+        for letter in text:
+            if letter.lower() in constants.alphabet:
+                index = ((constants.alphabet.index(letter.lower()) - beta) * constants.inverses[alpha]) % 26
+                shifted_letter = constants.alphabet[index]
+                if letter.isupper():
+                    shifted_letter = shifted_letter.upper()
+                shifted += shifted_letter
+            else:
+                shifted += letter
+        
+        return (shifted, ())
+
+    def display(self):
+        self.frame.columnconfigure(0, weight=1)
+        self.frame.rowconfigure(0, weight=1)
+        self.frame.rowconfigure(4, weight=1)
+        self.alpha_label.grid(row=0, column=0, sticky='S')
+        self.alpha_slider.grid(row=1, column=0, pady=10)
+        self.beta_label.grid(row=2, column=0, pady=10)
+        self.beta_slider.grid(row=3, column=0, sticky='N')

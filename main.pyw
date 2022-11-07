@@ -822,6 +822,7 @@ if __name__ == '__main__':
     create_stage(BinaryCode, 2)
     create_stage(Caesar, 2)
     create_stage(Substitution, 2)
+    create_stage(Affine, 2)
     
     check_darkdetect_queue()
     update_window()

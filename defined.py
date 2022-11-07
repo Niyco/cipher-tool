@@ -25,7 +25,7 @@ class Stage:
 class Constants:
     theme_path = r'themes/'
     lang_path = r'lang/'
-    modes = ['light', 'dark']
+    modes = ('light', 'dark')
     default_size ='1366x768'
     min_size = '672x378'
     check_queue_delay = 100
@@ -59,6 +59,7 @@ class Constants:
                     '01011': ('j', 'BELL'), '01111': ('k', '('), '10010': ('l', ')'), '10001': ('z', '+'),
                     '11101': ('x', '/'), '01110': ('c', ':'), '11110': ('v', '='), '11001': ('b', '?'),
                     '01100': ('n', ','), '11100': ('m', '.'), '11011': ('FS', 'FS'), '11111': ('LS', 'LS')}
+    inverses = {1: 1, 3: 9, 5: 21, 7: 15, 9: 3, 11: 19, 15: 7, 17: 23, 19: 11, 21: 7, 23: 17, 25: 25}
     
     theme = None
     lang = None
@@ -73,13 +74,13 @@ class Constants:
     word_frequencies = None
     
     def load(self):
-        theme_file = open(self.theme_path + self.theme_name + '.json')
+        theme_file = open(self.theme_path + self.theme_name + '.json', encoding='utf-8')
         self.theme = json.load(theme_file)
         theme_file.close()
-        lang_file = open(self.lang_path + 'lang_' + self.lang_name + '.json')
+        lang_file = open(self.lang_path + 'lang_' + self.lang_name + '.json', encoding='utf-8')
         self.lang = json.load(lang_file)
         lang_file.close()
-        freq_file = open(self.lang_path + 'freq_' + self.lang_name + '.json')
+        freq_file = open(self.lang_path + 'freq_' + self.lang_name + '.json', encoding='utf-8')
         freq_data = json.load(freq_file)
         freq_file.close()
 

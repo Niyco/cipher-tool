@@ -84,5 +84,10 @@
 		"button_2": "Unsubstitute",
 		"keyword": "Keyword",
 		"encode": "Encode"
-	}
+	},
+    "stage_affine": {
+        "name": "Affine",
+        "alpha_label": "Alpha (α):",
+        "beta_label": "Beta (β):"
+    }
 }
