@@ -36,7 +36,7 @@ if __name__ == '__main__':
             super().setup(self, frame, constants)
             self.input_widget = tk.Text(frame, bd=0, bg=constants.theme['color']['entry'][constants.mode],
                                         font=(constants.theme['text'][constants.os]['font'], font_size),
-                                         fg=constants.theme['color']['text'][constants.mode],
+                                         fg=constants.theme['color']['text'][constants.mode], wrap='word',
                                         insertbackground=constants.theme['color']['text'][constants.mode])
             self.input_widget.insert(1.0, self.input)
             self.input_widget.bind('<<Modified>>', self.on_modify)
@@ -160,7 +160,7 @@ if __name__ == '__main__':
         stage_output = tk.Text(output_frame, bd=0, state='disabled',
                                bg=constants.theme['color']['entry'][constants.mode],
                                font=(constants.theme['text'][constants.os]['font'], font_size),
-                               fg=constants.theme['color']['text'][constants.mode],
+                               fg=constants.theme['color']['text'][constants.mode], wrap='word',
                                insertbackground=constants.theme['color']['text'][constants.mode])
         stage_output.grid(padx=8, pady=8, sticky='NESW')
 
@@ -821,8 +821,9 @@ if __name__ == '__main__':
 
     create_stage(BinaryCode, 2)
     create_stage(Caesar, 2)
-    create_stage(Substitution, 2)
     create_stage(Affine, 2)
+    create_stage(Substitution, 2)
+    create_stage(Vigenere, 2)
     
     check_darkdetect_queue()
     update_window()

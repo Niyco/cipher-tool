@@ -289,7 +289,8 @@ class Caesar(Stage):
             if letter.lower() in constants.alphabet:
                 index = (constants.alphabet.index(letter.lower()) - shift) % 26
                 shifted_letter = constants.alphabet[index]
-                if letter.isupper():
+
+                if encode:
                     shifted_letter = shifted_letter.upper()
                 shifted += shifted_letter
             else:
@@ -365,7 +366,8 @@ class Substitution(Stage):
                     value_index += 1
                     continue
                 else:
-                    self.substitutions[self.constants.alphabet[key_index].upper()] = self.constants.alphabet[value_index]
+                    v = self.constants.alphabet[value_index]
+                    self.substitutions[self.constants.alphabet[key_index].upper()] = v
 
             key_index += 1
             value_index += 1
@@ -565,14 +567,11 @@ class Affine(Stage):
         for letter in text:
             if letter.lower() in constants.alphabet:
                 if encode:
-                    print(constants.alphabet.index(letter.lower()))
-                    print(alpha, beta)
                     index = (constants.alphabet.index(letter.lower()) * alpha + beta) % 26
-                    print(index)
                 else:
                     index = ((constants.alphabet.index(letter.lower()) - beta) * constants.inverses[alpha]) % 26
                 shifted_letter = constants.alphabet[index]
-                if letter.isupper():
+                if encode:
                     shifted_letter = shifted_letter.upper()
                 shifted += shifted_letter
             else:
@@ -589,3 +588,143 @@ class Affine(Stage):
         self.beta_label.grid(row=2, column=0, pady=10)
         self.beta_slider.grid(row=3, column=0, sticky='N')
         self.encode_switch.grid(row=4, column=0, padx=15, pady=15, sticky='SE')
+
+class Vigenere(Stage):
+    def __init__(self, update_output):
+        super().__init__(update_output)
+        self.encode = tk.IntVar(value=0)
+        self.mode = tk.IntVar(value=0)
+        self.keyword_length = tk.StringVar(value='5')
+        self.keyword_contents = tk.StringVar(value='AAAAA')
+        self.encode.trace('w', self.update_mode)
+        self.mode.trace('w', self.update_mode)
+        self.keyword_length.trace('w', self.update_key_length)
+        self.keyword_contents.trace('w', self.update_keyword)
+        self.update_vars.extend([0, 0, 5, 'AAAAA'])
+        self.input_locked = True
+        self.input_delay = False
+
+    def setup(self, frame, constants):
+        super().setup(self, frame, constants)
+        self.kw_len_label = ctk.CTkLabel(frame, text=self.texts['keyword_length'])
+        self.kw_label = ctk.CTkLabel(frame, text=self.texts['keyword_contents'])
+        self.kw_len_input = ctk.CTkEntry(frame, textvariable=self.keyword_length, width=30,
+                                         justify='center', takefocus=0)
+        self.kw_input = ctk.CTkEntry(frame, textvariable=self.keyword_contents, width=55)       
+        self.radio_affine = ctk.CTkRadioButton(frame, variable=self.mode, value=0, text=self.texts['radio_affine'])
+        self.radio_beaufort = ctk.CTkRadioButton(frame, variable=self.mode, value=1,
+                                               text=self.texts['radio_beaufort'])
+        self.encode_switch = ctk.CTkSwitch(frame, variable=self.encode, text=self.texts['encode'])
+        self.kw_len_input.bind('<MouseWheel>', self.scroll_length)
+        self.kw_input.bind('<Button-1>', lambda e: self.frame.after(0, self.select_left))
+        self.kw_input.bind('<Key>', self.kw_keypress_event)
+    
+    def kw_keypress_event(self, event):
+        if self.input_locked:
+            if self.input_delay or event.keysym.lower() not in self.constants.alphabet:
+                return 'break'
+
+            self.input_delay = True
+            self.frame.after(1, self.remove_input_delay)
+            if event.keysym in self.constants.alphabet:
+                self.input_locked = False
+                self.frame.event_generate(f'<{event.keysym.upper()}>')
+                return 'break'
+            
+        else:
+            self.input_locked = True
+    
+    def remove_input_delay(self):
+        self.input_delay = False
+
+    def select_left(self):
+        self.input_locked = False
+        self.frame.event_generate('<Left>')
+        self.input_locked = False
+        self.frame.event_generate('<Shift-Right>')
+
+    def scroll_length(self, event):
+        if event.delta > 0:
+            self.keyword_length.set(str(min(int(self.keyword_length.get()) + 1, 15)))
+        else:
+            self.keyword_length.set(str(max(int(self.keyword_length.get()) - 1, 1)))
+
+    def update_mode(self, var, index, mode):
+        if var == str(self.encode):
+            self.update_vars[0] = self.encode.get()
+        else:
+            self.update_vars[1] = self.mode.get()
+                                                        
+        self.update_output(self)
+                                                        
+    def update_key_length(self, *args):
+        length = self.keyword_length.get()
+        if length.isnumeric():
+            length = int(length)
+            if 0 < length and length < 16:
+                previous = self.update_vars[2]
+                if length > previous:
+                    new_keyword = self.keyword_contents.get() + 'A' * (length - previous)
+                elif length < previous:
+                    new_keyword = self.keyword_contents.get()[:(length - previous)]
+                else:
+                    return
+
+                self.update_vars[2] = length
+                self.kw_input.configure(width=13 + 8 * length)
+                self.update_keyword(keyword=new_keyword)
+
+    def update_keyword(self, *args, keyword=''):
+        prev_keyword = self.update_vars[3]
+
+        if not keyword:
+            keyword = self.keyword_contents.get()
+            len_difference = self.update_vars[2] - len(keyword)
+            if len_difference > 1:
+                self.keyword_contents.set(self.keyword_contents.get() + 'A' * (len_difference - 1))
+            elif len_difference != 0:
+                return
+        else:
+            self.keyword_contents.set(keyword)
+        
+        self.input_locked = False
+        self.frame.master.event_generate('<Right>')
+        self.input_locked = False
+        self.frame.master.event_generate('<Shift-Left>')
+        self.update_vars[3] = keyword
+        self.update_output(self)
+
+    @staticmethod
+    def update(text, constants, encode, mode, keyword_length, keyword_contents):
+        if mode:
+            cal_char = lambda char, key: key - char
+        elif encode:
+            cal_char = lambda char, key: char + key
+        else:
+            cal_char = lambda char, key: char - key
+
+        result = ''
+        for index, letter in enumerate(text):
+            if letter.lower() in constants.alphabet:
+                char = constants.alphabet.index(letter.lower())
+                key = constants.alphabet.index(keyword_contents[index % keyword_length].lower())
+                new_letter = constants.alphabet[cal_char(char, key) % 26]
+
+                if encode:
+                    new_letter = new_letter.upper()
+                result += new_letter
+            else:
+                result += letter
+        return (result, ())
+
+    def display(self):
+        self.frame.rowconfigure(4, minsize=100)
+        self.frame.rowconfigure(7, weight=1)
+        self.frame.columnconfigure(1, weight=1)
+        self.kw_len_label.grid(column=0, row=0)
+        self.kw_len_input.grid(column=0, row=1, pady=15)
+        self.kw_label.grid(column=0, row=2, pady=15)
+        self.kw_input.grid(column=0, row=3)
+        self.radio_affine.grid(column=0, row=5, padx=25, pady=6, sticky='W')
+        self.radio_beaufort.grid(column=0, row=6, padx=25, pady=6, sticky='W')
+        self.encode_switch.grid(column=1, row=7, padx=15, pady=15, sticky='SE')

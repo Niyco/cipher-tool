@@ -76,19 +76,27 @@
 	"stage_caesar": {
 		"name": "Caesar",
 		"label": "Shift:",
-		"encode": "Encode"
+		"encode": "Encrypt"
 	},
 	"stage_substitution": {
 		"name": "Simple Substitution",
 		"button_1": "Substitute",
 		"button_2": "Unsubstitute",
 		"keyword": "Keyword",
-		"encode": "Encode"
+		"encode": "Encrypt"
 	},
     "stage_affine": {
         "name": "Affine",
         "alpha_label": "Alpha (α):",
         "beta_label": "Beta (β):",
-        "encode": "Encode"
-    }
+        "encode": "Encrypt"
+    },
+	"stage_vigenere": {
+		"name": "Vigenere",
+		"keyword_length": "Length:",
+		"keyword_contents": "Keyword:",
+		"radio_affine": "Affine",
+		"radio_beaufort": "Beaufort",
+		"encode": "Encrypt"
+	}
 }

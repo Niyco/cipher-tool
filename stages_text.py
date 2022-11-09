@@ -68,11 +68,10 @@ class Block(Stage):
     def setup(self, frame, constants):
         super().setup(self, frame, constants)
         self.label = ctk.CTkLabel(frame, text=self.texts['label'])
-        self.input = ctk.CTkEntry(frame, textvariable=self.block_length_var, width=30)
+        self.input = ctk.CTkEntry(frame, textvariable=self.block_length_var, width=30, justify='center')
         self.input.bind('<MouseWheel>', self.input_scroll)
 
     def input_update(self, var, index, mode):
-        print(1)
         value = self.block_length_var.get()
         if value.isnumeric() and value != '0':
             self.update_vars[0] = int(value)
