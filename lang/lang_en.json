@@ -26,9 +26,6 @@
 		"name": "Block Text",
 		"label": "Block Length:"
 	},
-	"stage_reverse": {
-		"name": "Reverse"
-	},
 	"stage_spaces": {
 		"name": "Add spaces",
 		"label": "Complexity:"
@@ -95,7 +92,7 @@
 		"name": "Vigenere",
 		"keyword_length": "Length:",
 		"keyword_contents": "Keyword:",
-		"radio_affine": "Affine",
+		"radio_vigenere": "Vigenere",
 		"radio_beaufort": "Beaufort",
 		"encode": "Encrypt"
 	}

@@ -611,7 +611,8 @@ class Vigenere(Stage):
         self.kw_len_input = ctk.CTkEntry(frame, textvariable=self.keyword_length, width=30,
                                          justify='center', takefocus=0)
         self.kw_input = ctk.CTkEntry(frame, textvariable=self.keyword_contents, width=55)       
-        self.radio_affine = ctk.CTkRadioButton(frame, variable=self.mode, value=0, text=self.texts['radio_affine'])
+        self.radio_vigenere = ctk.CTkRadioButton(frame, variable=self.mode, value=0,
+                                                 text=self.texts['radio_vigenere'])
         self.radio_beaufort = ctk.CTkRadioButton(frame, variable=self.mode, value=1,
                                                text=self.texts['radio_beaufort'])
         self.encode_switch = ctk.CTkSwitch(frame, variable=self.encode, text=self.texts['encode'])
@@ -725,6 +726,6 @@ class Vigenere(Stage):
         self.kw_len_input.grid(column=0, row=1, pady=15)
         self.kw_label.grid(column=0, row=2, pady=15)
         self.kw_input.grid(column=0, row=3)
-        self.radio_affine.grid(column=0, row=5, padx=25, pady=6, sticky='W')
+        self.radio_vigenere.grid(column=0, row=5, padx=25, pady=6, sticky='W')
         self.radio_beaufort.grid(column=0, row=6, padx=25, pady=6, sticky='W')
         self.encode_switch.grid(column=1, row=7, padx=15, pady=15, sticky='SE')
