@@ -18,6 +18,7 @@ if __name__ == '__main__':
     from stages_analysis import *
     from stages_cipher import *
     from defined import Stage, Constants
+    from PIL import Image
     import tkinter as tk
     import customtkinter as ctk
     import sys
@@ -66,9 +67,9 @@ if __name__ == '__main__':
     def resize(event):
         if isinstance(event.widget, ctk.windows.ctk_tk.CTk) and not toolbar_animated:
             if toolbar_active:
-                toolbar.config(height=72, width=event.width)
+                toolbar.configure(height=72, width=event.width)
             else:
-                toolbar.config(height=0, width=event.width)
+                toolbar.configure(height=0, width=event.width)
 
         elif event.widget == toolbar_canvas:
             toolbar_scroll(None)
@@ -99,8 +100,8 @@ if __name__ == '__main__':
         toolbar_canvas.bind('<MouseWheel>', toolbar_scroll)
 
         toolbar_canvas.create_rectangle(0, 0, 0, 0, outline=constants.theme['color']['deselected'][constants.mode])
-        ctk.CTkLabel(toolbar_radio, image=toolbar_separator_image).place(x=85, y=0)
-        ctk.CTkLabel(toolbar_menu, image=toolbar_separator_image).place(x=-45, y=0)
+        ctk.CTkButton(toolbar_radio, fg_color='transparent', hover=False, text='', image=toolbar_separator_image).place(x=85, y=0)
+        ctk.CTkButton(toolbar_menu, fg_color='transparent', hover=False, text='', image=toolbar_separator_image).place(x=-45, y=0)
         radio_text_button = ctk.CTkButton(toolbar_radio, text=constants.lang['radio_text'], height=24,
                                           corner_radius=10, command=lambda: radio_select(0),
                                           fg_color=constants.theme['color']['deselected'][constants.mode],
@@ -202,22 +203,24 @@ if __name__ == '__main__':
         if not font_size: font_size = constants.theme['text'][constants.os]['size']
         
         icon_image = tk.PhotoImage(file=constants.theme['path']['window_icon'])
-        toolbar_toggle_image = tk.PhotoImage(file=constants.theme['path']['toolbar_icon'])
         stage_up_image = tk.PhotoImage(file=constants.theme['path']['stage_up'][constants.mode])
         stage_down_image = tk.PhotoImage(file=constants.theme['path']['stage_down'][constants.mode])
-        stage_remove_image = tk.PhotoImage(file=constants.theme['path']['stage_remove'])
-        stage_shown_image = tk.PhotoImage(file=constants.theme['path']['stage_shown'])
-        stage_hidden_image = tk.PhotoImage(file=constants.theme['path']['stage_hidden'])
-        toolbar_separator_image = tk.PhotoImage(file=constants.theme['path']['toolbar_separator'])
         toolbar_stage_image = tk.PhotoImage(file=constants.theme['path']['toolbar_stage'][constants.mode])
-        toolbar_increase_image = tk.PhotoImage(file=constants.theme['path']['toolbar_increase'][constants.mode])
-        toolbar_decrease_image = tk.PhotoImage(file=constants.theme['path']['toolbar_decrease'][constants.mode])
-        toolbar_copy_image = tk.PhotoImage(file=constants.theme['path']['toolbar_copy'][constants.mode])
-        toolbar_clear_image = tk.PhotoImage(file=constants.theme['path']['toolbar_clear'][constants.mode])
-        toolbar_theme_image = tk.PhotoImage(file=constants.theme['path']['toolbar_theme'][constants.mode])
-        toolbar_options_image = tk.PhotoImage(file=constants.theme['path']['toolbar_options'][constants.mode])
-        loading_animation_images = [tk.PhotoImage(file=constants.theme['path']['loading_animation'][constants.mode],
-                                                  format=f'gif -index {x}') for x in range(8)]
+        
+        toolbar_toggle_image = load_image('toolbar_icon', False)
+        stage_remove_image = load_image('stage_remove', False)
+        stage_shown_image = load_image('stage_shown', False)
+        stage_hidden_image = load_image('stage_hidden', False)
+        toolbar_separator_image = load_image('toolbar_separator', False)
+        toolbar_increase_image = load_image('toolbar_increase', True)
+        toolbar_decrease_image = load_image('toolbar_decrease', True)
+        toolbar_copy_image = load_image('toolbar_copy', True)
+        toolbar_clear_image = load_image('toolbar_clear', True)
+        toolbar_theme_image = load_image('toolbar_theme', True)
+        toolbar_options_image = load_image('toolbar_options', True)
+        #loading_animation_images = [ctk.CTkImage(light_image=Image.open(constants.theme['path']['loading_animation'][constants.mode]))]
+        #loading_animation_images = [tk.PhotoImage(file=constants.theme['path']['loading_animation'][constants.mode],
+        #                                          format=f'gif -index {x}') for x in range(8)]
         root.iconphoto(False, icon_image)
         root.title(constants.lang['title'])
 
@@ -232,6 +235,14 @@ if __name__ == '__main__':
             toggle_toolbar()
         radio_select(radio_selected)
 
+    def load_image(name, mode):
+        path = constants.theme['path'][name]
+        if mode:
+            path = path[constants.mode]
+
+        image = Image.open(path)
+        return ctk.CTkImage(light_image=image, size=image.size)
+    
     def check_darkdetect_queue():
         try:
             darkdetect_queue.get(False)
@@ -244,7 +255,7 @@ if __name__ == '__main__':
     def toolbar_animation(toolbar_active, start, stop, step, delay):
         global toolbar_animated
 
-        toolbar.config(height=start, width=root.winfo_width())
+        toolbar.configure(height=start, width=root.winfo_width())
         if (start != 0 and start != 72
             and start % 72 / constants.toolbar_step // (constants.toolbar_updates
                                                         + 1) * constants.toolbar_step == 0):
@@ -299,7 +310,7 @@ if __name__ == '__main__':
         button_color = named_to_hex(constants.theme['color']['button'][constants.mode])
         
         radio_buttons[radio_selected].configure(fg_color=deselected_color, hover_color=deselected_color)
-        radio_buttons[button].configure(fg_color=button_color, hover_color=named_to_hex)
+        radio_buttons[button].configure(fg_color=button_color)
         radio_selected = button
         
         for stage in toolbar_stages:
@@ -318,8 +329,8 @@ if __name__ == '__main__':
                                          fill=constants.theme['color']['text'][constants.mode])
             for item in [image, text]:
                 toolbar_canvas.tag_bind(item, '<Button-1>', lambda event, stage=stage: add_stage(button, stage))
-                toolbar_canvas.tag_bind(item, '<Enter>', lambda event: toolbar_canvas.config(cursor='hand2'))
-                toolbar_canvas.tag_bind(item, '<Leave>', lambda event: toolbar_canvas.config(cursor=''))
+                toolbar_canvas.tag_bind(item, '<Enter>', lambda event: toolbar_canvas.configure(cursor='hand2'))
+                toolbar_canvas.tag_bind(item, '<Leave>', lambda event: toolbar_canvas.configure(cursor=''))
             toolbar_stages.append((image, text))
 
         toolbar_stages_last = x + 75
@@ -373,8 +384,8 @@ if __name__ == '__main__':
         length = len(stage_positions.keys())
         display_name = constants.lang['stage_' + name.lower()]['name']
         bg_color = named_to_hex(constants.theme['color']['bg_color'][constants.mode])
-        y = (stage_up_image.height() + 4) * length + stage_up_image.height() // 2
-        stages_last = max(stages_last, y + stage_up_image.height() // 2)
+        y = 40 * length + 36 // 2
+        stages_last = max(stages_last, y + 36 // 2)
         y -= stages_pos
         image = stages_canvas.create_image(stages_canvas.winfo_width() // 2, y, image=stage_up_image)
         text = stages_canvas.create_text(stages_canvas.winfo_width() // 2, y - 4, text=display_name,
@@ -405,8 +416,8 @@ if __name__ == '__main__':
             stages_canvas.tag_bind(item, '<ButtonPress-1>', lambda event: stage_mb_down(event, stage_index))
             stages_canvas.tag_bind(item, '<ButtonRelease-1>', stage_mb_up)
             stages_canvas.tag_bind(item, '<Motion>', stage_mouse_move)
-            stages_canvas.tag_bind(item, '<Enter>', lambda event: stages_canvas.config(cursor='hand2'))
-            stages_canvas.tag_bind(item, '<Leave>', lambda event: stages_canvas.config(cursor=''))
+            stages_canvas.tag_bind(item, '<Enter>', lambda event: stages_canvas.configure(cursor='hand2'))
+            stages_canvas.tag_bind(item, '<Leave>', lambda event: stages_canvas.configure(cursor=''))
             
         if name != 'Input':
             remove = ctk.CTkButton(stages_canvas, text='', image=stage_remove_image,
@@ -473,7 +484,7 @@ if __name__ == '__main__':
         stage[3].destroy()
         stage[4].destroy()
         move_stages(pos_index + 1, len(stage_positions), -1)
-        stages_last -= stage_up_image.height() + 4
+        stages_last -= 40
 
         if selected_stage == stage_index:
             if pos_index == len(stage_positions):
@@ -491,8 +502,8 @@ if __name__ == '__main__':
         
         for i in range(range_start, range_end + 1):
             stage = current_stages[stage_positions[i]]
-            y = (stage_up_image.height() + 4) * (i + amount) + stage_up_image.height() // 2
-            stages_last = max(stages_last, y + stage_up_image.height() // 2)
+            y = 40 * (i + amount) + 36 // 2
+            stages_last = max(stages_last, y + 36 // 2)
             y -= stages_pos
 
             if stage_positions[i] == selected_stage:
@@ -575,13 +586,13 @@ if __name__ == '__main__':
                 stages_canvas.coords(stage[2], x, event.y - 4)
 
             pos_index = next(k for k, v in stage_positions.items() if v == dragged_stage)
-            y = (stage_up_image.height() + 4) * pos_index + stage_up_image.height() // 2 - stages_pos
+            y = 40 * pos_index + 36 // 2 - stages_pos
             difference = event.y - y
             if difference != 0:
                 direction = int(difference / abs(difference))
                 move_stage = pos_index + direction
                 
-                if (abs(difference) > stage_up_image.height() // 2 + 4 and
+                if (abs(difference) > 36 // 2 + 4 and
                     move_stage != 0 and move_stage < len(stage_positions)):
                     move_stages(move_stage, move_stage, 0 - direction)
                     stage_positions[pos_index + direction] = dragged_stage
