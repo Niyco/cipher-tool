@@ -1,15 +1,37 @@
+import customtkinter as ctk
 import darkdetect
 import json
 import sys
+
+class DisplayText(ctk.CTkTextbox):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        def textbox_click(event):
+            self.focus()
+            return 'break'
+
+        self.bind('<Motion>', lambda event: 'break')
+        self.bind('<Leave>', lambda event: 'break')
+        self.bind('<ButtonPress-1>', textbox_click)
+
+class CustomSlider(ctk.CTkSlider):
+    def __init__(self, *args, **kwargs):
+        #slider_cb = kwargs.pop('slider_cb')
+        var_cb = kwargs.pop('var_cb')
+        super().__init__(*args, **kwargs)
+        
+        self.bind('<ButtonRelease-1>', lambda event: var_cb(self._variable, self._variable.get()))
 
 class Stage:
     def __init__(self, update_output):
         self.update_output = update_output
         self.update_vars = []
 
-    def setup(self, child, frame, constants):
+    def setup(self, child, frame, constants, font):
         self.frame = frame
         self.constants = constants
+        self.font = font
         self.texts = constants.lang['stage_' + type(child).__name__.lower()]
         
     @staticmethod

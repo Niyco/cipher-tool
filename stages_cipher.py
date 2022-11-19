@@ -348,8 +348,7 @@ class Substitution(Stage):
         self.update_output(self)
 
     def get_keyword(self):
-        dialog = ctk.CTkInputDialog(master=None, text=self.texts['keyword'] + ':',
-                                              title=self.texts['keyword'])
+        dialog = ctk.CTkInputDialog(text=self.texts['keyword'] + ':', title=self.texts['keyword'])
         keyword = dialog.get_input()
         keyword = ''.join(list({x.lower(): None for x in keyword if x.lower() in self.constants.alphabet}))
         
