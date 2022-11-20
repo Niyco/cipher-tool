@@ -1,4 +1,4 @@
-from defined import Stage
+from defined import Stage, DisplayText, CustomSlider
 from stages_text import Spaces
 import tkinter as tk
 import customtkinter as ctk
@@ -9,11 +9,11 @@ import math
 import time
 
 class Length(Stage):
-    def setup(self, frame, constants):
-        super().setup(self, frame, constants)
+    def setup(self, frame, constants, font):
+        super().setup(self, frame, constants, font)
         self.length_var = tk.StringVar()
         self.length_var.set('0')
-        self.length_widget = ctk.CTkLabel(self.frame, textvariable=self.length_var)
+        self.length_widget = ctk.CTkLabel(self.frame, textvariable=self.length_var, font=self.font)
 
     @staticmethod
     def update(text, constants):
@@ -40,18 +40,17 @@ class Frequency(Stage):
         self.alpha_ex_var.trace('w', self.input_update)
         self.update_vars.extend([0, 1])
     
-    def setup(self, frame, constants):
-        super().setup(self, frame, constants)
-        self.radio_1 = ctk.CTkRadioButton(frame, variable=self.mode_var, value=0, text=self.texts['radio_1'])
-        self.radio_2 = ctk.CTkRadioButton(frame, variable=self.mode_var, value=1, text=self.texts['radio_2'])
-        self.radio_3 = ctk.CTkRadioButton(frame, variable=self.mode_var, value=2, text=self.texts['radio_3'])
-        self.checkbox = ctk.CTkCheckBox(frame, variable=self.alpha_ex_var, text=self.texts['checkbox'])
-        self.textbox = tk.Text(frame, bd=0, bg=self.constants.theme['color']['entry'][self.constants.mode],
-                               fg=constants.theme['color']['text'][self.constants.mode], width=40, state='disabled',
-                               insertbackground=self.constants.theme['color']['text'][self.constants.mode],
-                               selectbackground=self.constants.theme['color']['entry'][self.constants.mode])
-        self.scrollbar = ctk.CTkScrollbar(frame, command=self.textbox.yview, hover=False)
-        self.textbox.configure(yscrollcommand=self.scrollbar.set)
+    def setup(self, frame, constants, font):
+        super().setup(self, frame, constants, font)
+        self.radio_1 = ctk.CTkRadioButton(frame, variable=self.mode_var, value=0, font=self.font,
+                                          text=self.texts['radio_1'])
+        self.radio_2 = ctk.CTkRadioButton(frame, variable=self.mode_var, value=1, font=self.font,
+                                          text=self.texts['radio_2'])
+        self.radio_3 = ctk.CTkRadioButton(frame, variable=self.mode_var, value=2, font=self.font,
+                                          text=self.texts['radio_3'])
+        self.checkbox = ctk.CTkCheckBox(frame, variable=self.alpha_ex_var, font=self.font,
+                                        text=self.texts['checkbox'])
+        self.textbox = DisplayText(frame, font=self.font, width=120)
 
     def input_update(self, var, index, mode):
         if var == str(self.mode_var):
@@ -76,9 +75,9 @@ class Frequency(Stage):
             else:
                 frequencies[chars] = 1
         for k in frequencies.keys():
-            frequencies[k] /= text_length
+            frequencies[k] /= text_length - mode
         frequencies = dict(sorted(frequencies.items(), key=lambda e: e[1], reverse=True))
-        
+
         return (frequencies,)
 
     def update_widgets(self, frequencies):
@@ -102,20 +101,20 @@ class Frequency(Stage):
         self.radio_3.grid(column=0, row=2, padx=30, pady=6, sticky='W')
         self.checkbox.grid(column=0, row=3, padx=25, pady=15, sticky='NW')
         self.textbox.grid(column=1, row=0, pady=80, rowspan=4, sticky='NS')
-        self.scrollbar.grid(column=2, row=0, pady=80, rowspan=4, sticky='NSW')
 
 class IoC(Stage):
-    def setup(self, frame, constants):
-        super().setup(self, frame, constants)
+    def setup(self, frame, constants, font):
+        super().setup(self, frame, constants, font)
         self.ioc_var = tk.StringVar()
-        self.label = ctk.CTkLabel(self.frame, textvariable=self.ioc_var)
+        self.label = ctk.CTkLabel(self.frame, textvariable=self.ioc_var, font=self.font)
 
     @staticmethod
     def update(text, constants):
+        text = [c.lower() for c in text if c.lower() in constants.alphabet]
         if len(text) > 1:
-            length = len([c for c in text if c.lower() in constants.alphabet])
+            length = len(text)
             length = length * (length - 1)
-            letter_freqs = [text.lower().count(letter) for letter in constants.alphabet]
+            letter_freqs = [text.count(letter) for letter in constants.alphabet]
             ioc = sum([letter_freq * (letter_freq - 1) / length for letter_freq in letter_freqs])
         else:
             ioc = 0
@@ -124,7 +123,8 @@ class IoC(Stage):
 
     def update_widgets(self, ioc):
         accuracy = 5
-        language_difference = round(self.constants.language_ioc - ioc, accuracy)
+        lang_ioc = self.constants.language_ioc
+        language_difference = round(lang_ioc - ioc, accuracy)
         language_difference_str = ' ('
         if language_difference >= 0:
             language_difference_str += '+'
@@ -135,9 +135,10 @@ class IoC(Stage):
             random_difference_str += '+'
         random_difference_str += str(random_difference) + ')'
         
-        formatted = (self.texts['text_ioc'] + ' ' + str(round(ioc, accuracy)) + '\n\n' + self.texts['english_ioc']
-                     + ' '+ str(round(self.constants.language_ioc, accuracy)) + language_difference_str + '\n'
-                     + self.texts['random_ioc'] + ' ' + str(round(1 / 26, accuracy)) + random_difference_str)
+        formatted = (self.texts['text_ioc'] + ' ' + str(round(ioc, accuracy)) + '\n\n'
+                     + self.texts['english_ioc'] + ' ' + str(round(lang_ioc, accuracy))
+                     + language_difference_str + '\n' + self.texts['random_ioc'] + ' '
+                     + str(round(1 / 26, accuracy)) + random_difference_str)
         self.ioc_var.set(formatted)
     
     def display(self):
@@ -150,29 +151,28 @@ class SubstitutionFinder(Stage):
         super().__init__(update_output)
         self.results_var = tk.IntVar(value=10)
         self.iterations_var = tk.IntVar(value=10000)
-        self.results_var.trace('w', self.input_update)
-        self.iterations_var.trace('w', self.input_update)
         self.update_vars.extend([10, 10000, 0, Spaces.update])
         
-    def setup(self, frame, constants):
-        super().setup(self, frame, constants)
-        self.results_label = ctk.CTkLabel(frame, text=(self.texts['results_label']
-                                                       + ' ' + str(self.results_var.get())))
+    def setup(self, frame, constants, font):
+        super().setup(self, frame, constants, font)
+        self.results_label = ctk.CTkLabel(frame, text=(self.texts['results_label'] + ' '
+                                                       + str(self.results_var.get())),
+                                          font=self.font)
         self.iterations_label = ctk.CTkLabel(frame, text=(self.texts['iterations_label'] + ' '
-                                                          + str(self.iterations_var.get())))
-        self.results_slider = ctk.CTkSlider(frame, from_=1, to=26, number_of_steps=25, variable=self.results_var)
-        self.iterations_slider = ctk.CTkSlider(frame, from_=10000, to=100000, number_of_steps=9,
-                                               variable=self.iterations_var)
-        self.update_button = ctk.CTkButton(frame, text=self.texts['update_button'], command=self.update_button)
-        self.textbox = tk.Text(frame, bd=0, bg=self.constants.theme['color']['entry'][self.constants.mode],
-                               fg=constants.theme['color']['text'][self.constants.mode], width=12, state='disabled',
-                               insertbackground=self.constants.theme['color']['text'][self.constants.mode],
-                               selectbackground=self.constants.theme['color']['entry'][self.constants.mode])
+                                                          + str(self.iterations_var.get())),
+                                             font=self.font)
+        self.results_slider = CustomSlider(frame, number_of_steps=25, variable=self.results_var, 
+                                           from_=1, to=26, slider_cb=self.slider_update)
+        self.iterations_slider = CustomSlider(frame, number_of_steps=9, variable=self.iterations_var,
+                                              from_=10000, to=100000, slider_cb=self.slider_update)
+        self.update_button = ctk.CTkButton(frame, text=self.texts['update_button'],
+                                           command=self.update_button, font=self.font)
+        self.textbox = DisplayText(frame, font=self.font, width=110,
+                                   height=(self.results_var.get() + 1) * 16)
         self.textbox.bind('<Control-c>', self.copy)
-        self.scrollbar = ctk.CTkScrollbar(frame, command=self.textbox.yview, hover=False, height=350)
-        self.textbox.configure(yscrollcommand=self.scrollbar.set)
 
-        self.update_widgets({char.upper(): '' for char in self.constants.alphabet[:self.results_var.get()]})
+        alphabet = {char.upper(): '' for char in self.constants.alphabet[:self.results_var.get()]}
+        self.update_widgets(alphabet)
 
     def copy(self, event):
         value = base64.b64encode(pickle.dumps(self.substitutions))
@@ -184,23 +184,22 @@ class SubstitutionFinder(Stage):
         self.update_vars[2] = 1
         self.update_output(self)
         self.update_vars[2] = 0
-    
-    def input_update(self, var_name, index, mode):
-        if var_name == str(self.results_var):
-            self.update_vars[0] = self.results_var.get()
-            self.results_label.configure(text=(self.texts['results_label'] + ' '
-                                               + str(self.results_var.get())))
-            self.update_widgets({char.upper(): '' for char in self.constants.alphabet[:self.results_var.get()]})
-        else:
-            self.update_vars[1] = self.iterations_var.get()
-            self.iterations_label.configure(text=(self.texts['iterations_label'] + ' '
-                                                  + str(self.iterations_var.get())))
 
-        self.update_output(self)
-    
+    def slider_update(self, variable, value):
+        if variable == self.results_var:
+            self.update_vars[0] = value
+            self.results_label.configure(text=(self.texts['results_label'] + ' '
+                                               + str(value)))
+            self.textbox.configure(height=(value + 1) * 16)
+            self.update_widgets({char.upper(): '' for char in self.constants.alphabet[:value]})
+        else:
+            self.update_vars[1] = value
+            self.iterations_label.configure(text=(self.texts['iterations_label'] + ' '
+                                                  + str(value))) 
+        
     @staticmethod
     def update(text, constants, results, iterations, update, spaces_function):
-        text = ''.join([char for char in text if char.lower() in constants.alphabet + [' ']])
+        text = ''.join([char.lower() for char in text if char.lower() in constants.alphabet + [' ']])
         if update and len(text.replace(' ', '')) > 1:
             
             shortend_text = text[:1350]
@@ -247,12 +246,14 @@ class SubstitutionFinder(Stage):
                 best_subs = []
                 for i in range(amount):
                     best_subs.append(dict(sorted([(char.upper(), best_alphabets[i][index]) for index,
-                                                  char in enumerate(sample_alphabet)], key=lambda e:e[0])))
+                                                  char in enumerate(sample_alphabet)],
+                                                 key=lambda e:e[0])))
 
                 return best_subs, best_scores
-            
-            english_bigram_normalizer = 1 / max([bigram[1] for bigram in constants.bigram_frequencies.items()])
-            english_bigrams = {k: v * english_bigram_normalizer for k, v in constants.bigram_frequencies.items()}
+
+            english_bigrams = constants.bigram_frequencies.items()
+            english_bigram_normalizer = 1 / max([bigram[1] for bigram in english_bigrams])
+            english_bigrams = {k: v * english_bigram_normalizer for k, v in english_bigrams}
             bigrams = {}
             for word in shortend_text.split(' '):
                 for i in range(len(word) - 1):
@@ -280,7 +281,16 @@ class SubstitutionFinder(Stage):
                 scores.append(spaces_function(decoded, constants, 2, return_score=True))
             
             best_subs = candidates[scores.index(max(scores))]
-            return (best_subs,)
+            final = []
+            for k in best_subs:
+                contain_bigrams = [(bi.upper(), freq) for bi, freq in bigrams if k in bi.upper()]
+                final.append((k, best_subs[k], math.prod([(english_bigrams[best_subs[bigram[0]]
+                                                                           + best_subs[bigram[1]]])
+                                    * 1.68 ** count for bigram, count in contain_bigrams])))
+            
+            final = {k: v for k, v, s in sorted(final, key=lambda i: i[2], reverse=True)[:results]}
+
+            return (final,)
         
         else:
             return (None,)
@@ -306,5 +316,4 @@ class SubstitutionFinder(Stage):
         self.iterations_label.grid(row=2, column=1, pady=4, sticky='')
         self.iterations_slider.grid(row=3, column=1, pady=10, sticky='')
         self.update_button.grid(row=4, column=1, pady=50, sticky='N')
-        self.textbox.grid(row=0, column=2, rowspan=5, pady=120)
-        self.scrollbar.grid(row=0, column=3, rowspan=5, pady=120, sticky='')
+        self.textbox.grid(row=0, column=2, rowspan=5, pady=95)

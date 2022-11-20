@@ -1,15 +1,67 @@
+import customtkinter as ctk
 import darkdetect
 import json
 import sys
+
+class DisplayText(ctk.CTkTextbox):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        def textbox_click(event):
+            self.focus()
+            return 'break'
+
+        self.bind('<Motion>', lambda event: 'break')
+        self.bind('<Leave>', lambda event: 'break')
+        self.bind('<ButtonPress-1>', textbox_click)
+
+class CustomSlider(ctk.CTkSlider):
+    def __init__(self, *args, **kwargs):
+        variable = kwargs['variable']
+        self.slider_cb, self.prev_value, self.var_cb, self.loop = None, None, None, False
+        if 'slider_cb' in kwargs:
+            self.slider_cb = kwargs.pop('slider_cb')
+        if 'var_cb' in kwargs:
+            self.var_cb = kwargs.pop('var_cb') 
+        if 'loop' in kwargs:
+            self.loop = kwargs.pop('loop')
+
+        super().__init__(*args, **kwargs)
+
+        if self.slider_cb:
+            self.prev_value = variable.get()
+            variable.trace('w', self.var_trace)
+        if self.var_cb: 
+            self.bind('<ButtonRelease-1>', lambda event: self.var_cb(variable, variable.get()))
+        self.bind('<MouseWheel>', self.scroll)
+
+    def scroll(self, event):
+        if self.loop and self._variable.get() == self._to and event.delta < 0:
+            new = self._from_
+        elif self.loop and self._variable.get() == self._from_ and event.delta > 0:
+            new = self._to
+        else:
+            change = event.delta // 120 * (self._to - self._from_) // self._number_of_steps
+            new = max(min(self._variable.get() - change, self._to), self._from_)
+        self._variable.set(new)
+        if self.var_cb:
+            self.var_cb(self._variable, self._variable.get())
+        
+    def var_trace(self, *args):
+        self.new_value = self._variable.get()
+        if self.new_value != self.prev_value:
+            self.prev_value = self.new_value
+            self.slider_cb(self._variable, self.prev_value)
 
 class Stage:
     def __init__(self, update_output):
         self.update_output = update_output
         self.update_vars = []
 
-    def setup(self, child, frame, constants):
+    def setup(self, child, frame, constants, font):
         self.frame = frame
         self.constants = constants
+        self.font = font
         self.texts = constants.lang['stage_' + type(child).__name__.lower()]
         
     @staticmethod
@@ -29,6 +81,7 @@ class Constants:
     default_size ='1366x768'
     min_size = '672x378'
     check_queue_delay = 100
+    font_change_delay = 180
     toolbar_step = 12
     toolbar_updates = 0
     toolbar_delay = 12
