@@ -68,6 +68,7 @@ class App():
         self.toolbar_active = False
         self.toolbar_stages_last = 0
         self.stages_last = 0
+        self.font_change_after = None
         self.dragging = False
         self.dragged_start = (0, 0)
         self.dragged_end = (0, 0)
@@ -188,6 +189,13 @@ class App():
         self.radio_select(self.radio_selected)
 
     def create_widgets(self):
+        def enter_button(button):
+            button.configure(cursor='hand2')
+            button.configure(fg_color=colors['button'][mode])
+        def leave_button(button):
+            button.configure(cursor='')
+            button.configure(fg_color=colors['deselected'][mode])
+
         colors = self.constants.theme['color']
         mode = self.constants.mode
         lang = self.constants.lang
@@ -195,6 +203,7 @@ class App():
         self.toolbar_stages_pos = 0
         self.stages_pos = 0
         self.loading = False
+        self.font_size_held = False
         bg_color = self.named_to_hex(colors['bg_color'][mode])
 
         self.toolbar = ctk.CTkFrame(self.root, fg_color=bg_color)
@@ -239,18 +248,30 @@ class App():
         ctk.CTkButton(toolbar_menu, text='', width=30, height=30, image=self.toolbar_clear_image,
                       fg_color=colors['deselected'][mode], hover_color=colors['button'][mode],
                       corner_radius=15, command=self.clear_stages).place(x=84, y=4)
-        ctk.CTkButton(toolbar_menu, text='', width=30, height=30, image=self.toolbar_increase_image,
-                      fg_color=colors['deselected'][mode], hover_color=colors['button'][mode],
-                      corner_radius=15, command=lambda: self.change_font_size(2)).place(x=50, y=38)
-        ctk.CTkButton(toolbar_menu, text='', width=30, height=30, image=self.toolbar_decrease_image,
-                      fg_color=colors['deselected'][mode], hover_color=colors['button'][mode],
-                      corner_radius=15, command=lambda: self.change_font_size(-2)).place(x=84, y=38)
         ctk.CTkButton(toolbar_menu, text='', width=44, height=44, image=self.toolbar_theme_image,
                       fg_color=colors['deselected'][mode], hover_color=colors['button'][mode],
                       corner_radius=22, command=self.swap_theme).place(x=122, y=14)
         ctk.CTkButton(toolbar_menu, text='', width=44, height=44, image=self.toolbar_options_image,
                       fg_color=colors['deselected'][mode], hover_color=colors['button'][mode],
                       corner_radius=22).place(x=174, y=14)
+
+        font_increase = ctk.CTkButton(toolbar_menu, text='', width=30, height=30,
+                                      image=self.toolbar_increase_image, corner_radius=15,
+                                      fg_color=colors['deselected'][mode],
+                                      hover_color=colors['button'][mode])
+        font_decrease = ctk.CTkButton(toolbar_menu, text='', width=30, height=30,
+                                      image=self.toolbar_decrease_image, corner_radius=15,
+                                      fg_color=colors['deselected'][mode],
+                                      hover_color=colors['button'][mode])
+        font_increase.place(x=50, y=38)
+        font_decrease.place(x=84, y=38)
+        
+        for index, button in enumerate([font_increase, font_decrease]):
+            for widget in [button._canvas, button._image_label]:
+                widget.bind('<Enter>', lambda event, widget=button: enter_button(widget))
+                widget.bind('<Leave>', lambda event, widget=button: leave_button(widget))
+                widget.bind('<ButtonPress-1>', lambda event, index=index: self.font_size_down(1 - index * 2))
+                widget.bind('<ButtonRelease-1>', self.font_size_up)
 
         self.stages_canvas = tk.Canvas(self.root, bg=bg_color, highlightthickness=0, width=230)
         self.stages_canvas.columnconfigure(0, weight=1)
@@ -398,10 +419,17 @@ class App():
         self.stage_scroll(None)
         self.current_stages[0][0].input_widget.delete(1.0, 'end')
 
-    def change_font_size(self, amount):
+    def font_size_down(self, amount):
         font_size = self.display_font.cget('size')
         font_size = max(min(font_size - amount, -9), -21)
         self.display_font.configure(size=font_size)
+
+        self.font_size_after = self.root.after(self.constants.font_change_delay,
+                                               lambda: self.font_size_down(amount))
+
+    def font_size_up(self, event):
+        self.root.after_cancel(self.font_size_after)
+        self.font_size_held = False
 
     def swap_theme(self):
         if not self.toolbar_animated:
@@ -515,11 +543,13 @@ class App():
 
         if self.stages_shown[stage_index]:
             stage[4].configure(image=self.stage_hidden_image)
+            stage[4]._update_image()
             self.stages_shown[stage_index] = False
             if not analysis:
                 self.remove_result(stage_index, pos_index)
         else:
-            stage[4].configure(image=self.stage_shown_image)
+            stage[4].configure(image=self.stage_shown_image) 
+            stage[4]._update_image()
             self.stages_shown[stage_index] = True
             if not analysis:
                 self.results[stage_index] = ''

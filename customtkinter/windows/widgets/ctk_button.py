@@ -274,7 +274,7 @@ class CTkButton(CTkBaseClass):
                 e_padding_weight, w_padding_weight = 0, 1000
 
         scaled_minsize_rows = self._apply_widget_scaling(max(self._border_width + 1, self._border_spacing))
-        scaled_minsize_columns = self._apply_widget_scaling(max(self._corner_radius, self._border_width + 1, self._border_spacing))
+        scaled_minsize_columns = self._apply_widget_scaling(max(self._border_width + 1, self._border_spacing))
 
         self.grid_rowconfigure(0, weight=n_padding_weight, minsize=scaled_minsize_rows)
         self.grid_rowconfigure(4, weight=s_padding_weight, minsize=scaled_minsize_rows)

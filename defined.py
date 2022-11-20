@@ -81,6 +81,7 @@ class Constants:
     default_size ='1366x768'
     min_size = '672x378'
     check_queue_delay = 100
+    font_change_delay = 180
     toolbar_step = 12
     toolbar_updates = 0
     toolbar_delay = 12
