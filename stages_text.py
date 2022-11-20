@@ -1,27 +1,27 @@
-from defined import Stage
+from defined import Stage, CustomSlider
 import tkinter as tk
 import customtkinter as ctk
 import math
 
 class UpperCase(Stage):
-    def setup(self, frame, constants):
-        super().setup(self, frame, constants)
+    def setup(self, frame, constants, font):
+        super().setup(self, frame, constants, font)
         
     @staticmethod
     def update(text, constants):
         return (text.upper(), ())
     
 class LowerCase(Stage):
-    def setup(self, frame, constants):
-        super().setup(self, frame, constants)
+    def setup(self, frame, constants, font):
+        super().setup(self, frame, constants, font)
         
     @staticmethod
     def update(text, constants):
         return (text.lower(), ())
 
 class Reverse(Stage):
-    def setup(self, frame, constants):
-        super().setup(self, frame, constants)
+    def setup(self, frame, constants, font):
+        super().setup(self, frame, constants, font)
         
     @staticmethod
     def update(text, constants):
@@ -34,10 +34,10 @@ class Strip(Stage):
         self.spaces_var.set(1)
         self.update_vars.append(1)
         
-    def setup(self, frame, constants):
-        super().setup(self, frame, constants)
+    def setup(self, frame, constants, font):
+        super().setup(self, frame, constants, font)
         self.checkbox = ctk.CTkCheckBox(frame, text=self.texts['checkbox'], variable=self.spaces_var,
-                                        command=self.checkbox_update)
+                                        command=self.checkbox_update, font=self.font)
 
     def checkbox_update(self):
         self.update_vars[0] = bool(self.spaces_var.get())
@@ -65,10 +65,11 @@ class Block(Stage):
         self.block_length_var.trace('w', self.input_update)
         self.update_vars.append(5)
 
-    def setup(self, frame, constants):
-        super().setup(self, frame, constants)
-        self.label = ctk.CTkLabel(frame, text=self.texts['label'])
-        self.input = ctk.CTkEntry(frame, textvariable=self.block_length_var, width=30, justify='center')
+    def setup(self, frame, constants, font):
+        super().setup(self, frame, constants, font)
+        self.label = ctk.CTkLabel(frame, text=self.texts['label'], font=self.font)
+        self.input = ctk.CTkEntry(frame, textvariable=self.block_length_var, width=30,
+                                  justify='center', font=self.font)
         self.input.bind('<MouseWheel>', self.input_scroll)
 
     def input_update(self, var, index, mode):
@@ -101,7 +102,7 @@ class Block(Stage):
         self.frame.columnconfigure(0, weight=1)
         self.frame.columnconfigure(1, weight=1)
         self.frame.rowconfigure(0, weight=1)
-        self.label.grid(row=0, column=0, sticky='E')
+        self.label.grid(row=0, column=0, sticky='E', padx=8)
         self.input.grid(row=0, column=1, sticky='W')
 
 class Spaces(Stage):
@@ -109,16 +110,15 @@ class Spaces(Stage):
         super().__init__(update_output)
         self.complexity_var = tk.IntVar()
         self.complexity_var.set(2)
-        self.complexity_var.trace('w', self.input_update)
         self.update_vars.append(2)
 
-    def setup(self, frame, constants):
-        super().setup(self, frame, constants)
-        self.slider = ctk.CTkSlider(frame, from_=1, to=5, number_of_steps=4, variable=self.complexity_var)
-        self.label = ctk.CTkLabel(frame, text=self.texts['label'])
+    def setup(self, frame, constants, font):
+        super().setup(self, frame, constants, font)
+        self.slider = CustomSlider(frame, number_of_steps=4, variable=self.complexity_var,
+                                   from_=1, to=5, var_cb=self.input_update)
+        self.label = ctk.CTkLabel(frame, text=self.texts['label'], font=self.font)
 
-    def input_update(self, var, index, mode):
-        value = self.complexity_var.get()
+    def input_update(self, variable, value):
         self.update_vars[0] = value
         self.update_output(self)
 

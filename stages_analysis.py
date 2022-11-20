@@ -162,15 +162,17 @@ class SubstitutionFinder(Stage):
                                                           + str(self.iterations_var.get())),
                                              font=self.font)
         self.results_slider = CustomSlider(frame, number_of_steps=25, variable=self.results_var, 
-                                           from_=1, to=26, var_cb=self.input_update, command=print)
+                                           from_=1, to=26, slider_cb=self.slider_update)
         self.iterations_slider = CustomSlider(frame, number_of_steps=9, variable=self.iterations_var,
-                                              from_=10000, to=100000, var_cb=self.input_update)
+                                              from_=10000, to=100000, slider_cb=self.slider_update)
         self.update_button = ctk.CTkButton(frame, text=self.texts['update_button'],
                                            command=self.update_button, font=self.font)
-        self.textbox = DisplayText(frame, font=self.font, width=110)
+        self.textbox = DisplayText(frame, font=self.font, width=110,
+                                   height=(self.results_var.get() + 1) * 16)
         self.textbox.bind('<Control-c>', self.copy)
 
-        self.update_widgets({char.upper(): '' for char in self.constants.alphabet[:self.results_var.get()]})
+        alphabet = {char.upper(): '' for char in self.constants.alphabet[:self.results_var.get()]}
+        self.update_widgets(alphabet)
 
     def copy(self, event):
         value = base64.b64encode(pickle.dumps(self.substitutions))
@@ -182,20 +184,19 @@ class SubstitutionFinder(Stage):
         self.update_vars[2] = 1
         self.update_output(self)
         self.update_vars[2] = 0
-    
-    def input_update(self, variable, value):
+
+    def slider_update(self, variable, value):
         if variable == self.results_var:
             self.update_vars[0] = value
             self.results_label.configure(text=(self.texts['results_label'] + ' '
                                                + str(value)))
+            self.textbox.configure(height=(value + 1) * 16)
             self.update_widgets({char.upper(): '' for char in self.constants.alphabet[:value]})
         else:
             self.update_vars[1] = value
             self.iterations_label.configure(text=(self.texts['iterations_label'] + ' '
-                                                  + str(value)))
-
-        self.update_output(self)
-    
+                                                  + str(value))) 
+        
     @staticmethod
     def update(text, constants, results, iterations, update, spaces_function):
         text = ''.join([char.lower() for char in text if char.lower() in constants.alphabet + [' ']])
@@ -245,12 +246,14 @@ class SubstitutionFinder(Stage):
                 best_subs = []
                 for i in range(amount):
                     best_subs.append(dict(sorted([(char.upper(), best_alphabets[i][index]) for index,
-                                                  char in enumerate(sample_alphabet)], key=lambda e:e[0])))
+                                                  char in enumerate(sample_alphabet)],
+                                                 key=lambda e:e[0])))
 
                 return best_subs, best_scores
-            
-            english_bigram_normalizer = 1 / max([bigram[1] for bigram in constants.bigram_frequencies.items()])
-            english_bigrams = {k: v * english_bigram_normalizer for k, v in constants.bigram_frequencies.items()}
+
+            english_bigrams = constants.bigram_frequencies.items()
+            english_bigram_normalizer = 1 / max([bigram[1] for bigram in english_bigrams])
+            english_bigrams = {k: v * english_bigram_normalizer for k, v in english_bigrams}
             bigrams = {}
             for word in shortend_text.split(' '):
                 for i in range(len(word) - 1):
@@ -278,7 +281,16 @@ class SubstitutionFinder(Stage):
                 scores.append(spaces_function(decoded, constants, 2, return_score=True))
             
             best_subs = candidates[scores.index(max(scores))]
-            return (best_subs,)
+            final = []
+            for k in best_subs:
+                contain_bigrams = [(bi.upper(), freq) for bi, freq in bigrams if k in bi.upper()]
+                final.append((k, best_subs[k], math.prod([(english_bigrams[best_subs[bigram[0]]
+                                                                           + best_subs[bigram[1]]])
+                                    * 1.68 ** count for bigram, count in contain_bigrams])))
+            
+            final = {k: v for k, v, s in sorted(final, key=lambda i: i[2], reverse=True)[:results]}
+
+            return (final,)
         
         else:
             return (None,)
@@ -304,4 +316,4 @@ class SubstitutionFinder(Stage):
         self.iterations_label.grid(row=2, column=1, pady=4, sticky='')
         self.iterations_slider.grid(row=3, column=1, pady=10, sticky='')
         self.update_button.grid(row=4, column=1, pady=50, sticky='N')
-        self.textbox.grid(row=0, column=2, rowspan=5, pady=95, sticky='NS')
+        self.textbox.grid(row=0, column=2, rowspan=5, pady=95)

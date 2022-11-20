@@ -1,4 +1,4 @@
-from defined import Stage
+from defined import Stage, CustomSlider, DisplayText
 import tkinter as tk
 import customtkinter as ctk
 import unicodedata
@@ -15,8 +15,8 @@ class BinaryCode(Stage):
         self.word_separator_var = tk.StringVar(value='')
         self.update_vars.extend([0, 0, 0])
     
-    def setup(self, frame, constants):
-        super().setup(self, frame, constants)
+    def setup(self, frame, constants, font):
+        super().setup(self, frame, constants, font)
         self.mode_var.trace('w', self.input_update)
         self.encode_var.trace('w', self.input_update)
         self.letter_separator_var.trace('w', self.input_update)
@@ -24,35 +24,48 @@ class BinaryCode(Stage):
         self.option_var.trace('w', self.input_update)
         self.update_vars.extend([self.letter_separator_var.get(), self.word_separator_var.get()])
         self.encode = ctk.CTkSwitch(frame, text=self.texts['encode'], onvalue=1, offvalue=0,
-                                    variable=self.encode_var)
+                                    variable=self.encode_var, font=self.font)
         self.cipher_radio_1 = ctk.CTkRadioButton(frame, variable=self.mode_var, value=0,
-                                                 text=self.texts['cipher_radio_1'])
+                                                 text=self.texts['cipher_radio_1'], font=self.font)
         self.cipher_radio_2 = ctk.CTkRadioButton(frame, variable=self.mode_var, value=1,
-                                                 text=self.texts['cipher_radio_2'])
+                                                 text=self.texts['cipher_radio_2'], font=self.font)
         self.cipher_radio_3 = ctk.CTkRadioButton(frame, variable=self.mode_var, value=2,
-                                                 text=self.texts['cipher_radio_3'])
+                                                 text=self.texts['cipher_radio_3'], font=self.font)
         self.cipher_radio_4 = ctk.CTkRadioButton(frame, variable=self.mode_var, value=3,
-                                                 text=self.texts['cipher_radio_4'])
+                                                 text=self.texts['cipher_radio_4'], font=self.font)
         self.option_radio_1 = ctk.CTkRadioButton(frame, variable=self.option_var, value=0,
-                                                 text=self.texts['option_radio_1'])
+                                                 text=self.texts['option_radio_1'], font=self.font)
         self.option_radio_2 = ctk.CTkRadioButton(frame, variable=self.option_var, value=1,
-                                                 text=self.texts['option_radio_2'])
+                                                 text=self.texts['option_radio_2'], font=self.font)
         self.option_radio_3 = ctk.CTkRadioButton(frame, variable=self.option_var, value=0,
-                                                 text=self.texts['option_radio_3'])
+                                                 text=self.texts['option_radio_3'], font=self.font)
         self.option_radio_4 = ctk.CTkRadioButton(frame, variable=self.option_var, value=1,
-                                                 text=self.texts['option_radio_4'])
+                                                 text=self.texts['option_radio_4'], font=self.font)
         self.option_radio_5 = ctk.CTkRadioButton(frame, variable=self.option_var, value=0,
-                                                 text=self.texts['option_radio_5'])
+                                                 text=self.texts['option_radio_5'], font=self.font)
         self.option_radio_6 = ctk.CTkRadioButton(frame, variable=self.option_var, value=1,
-                                                 text=self.texts['option_radio_6'])
-        self.label_1 = ctk.CTkLabel(frame, text=self.texts['label_1'])
-        self.input_1 = ctk.CTkEntry(frame, textvariable=self.letter_separator_var, width=60)
-        self.label_2 = ctk.CTkLabel(frame, text=self.texts['label_2'])
-        self.input_2 = ctk.CTkEntry(frame, textvariable=self.word_separator_var, width=60)
+                                                 text=self.texts['option_radio_6'], font=self.font)
+        self.label_1 = ctk.CTkLabel(frame, text=self.texts['label_1'], font=self.font)
+        self.input_1 = ctk.CTkEntry(frame, textvariable=self.letter_separator_var, width=60,
+                                    font=self.font)
+        self.label_2 = ctk.CTkLabel(frame, text=self.texts['label_2'], font=self.font)
+        self.input_2 = ctk.CTkEntry(frame, textvariable=self.word_separator_var, width=60,
+                                    font=self.font)
     
     def input_update(self, var_name, index, mode):
         if var_name == str(self.encode_var):
             value = self.encode_var.get()
+            if value:
+                self.label_1.grid_forget()
+                self.input_1.grid_forget()
+                self.label_2.grid_forget()
+                self.input_2.grid_forget()
+            else:
+                self.label_1.grid(column=0, row=1, columnspan=2, sticky='E', padx=8)
+                self.input_1.grid(column=2, row=1, sticky='W')
+                self.label_2.grid(column=0, row=2, columnspan=2, sticky='E', padx=8)
+                self.input_2.grid(column=2, row=2, sticky='W')
+
             index = 0
         elif var_name == str(self.mode_var):
             self.display()
@@ -235,11 +248,14 @@ class BinaryCode(Stage):
         self.cipher_radio_2.grid(column=0, row=1, padx=30, pady=6, sticky='W')
         self.cipher_radio_3.grid(column=0, row=2, padx=30, pady=6, sticky='W')
         self.cipher_radio_4.grid(column=0, row=3, padx=30, pady=6, sticky='W')
-        self.label_1.grid(column=0, row=1, columnspan=2, sticky='E')
-        self.input_1.grid(column=2, row=1, sticky='W')
-        self.label_2.grid(column=0, row=2, columnspan=2, sticky='E')
-        self.input_2.grid(column=2, row=2, sticky='W')
         self.encode.grid(column=2, row=6, padx=15, pady=15, sticky='SE')
+
+        encode = self.encode_var.get()
+        if not encode:
+            self.label_1.grid(column=0, row=1, columnspan=2, sticky='E', padx=8)
+            self.input_1.grid(column=2, row=1, sticky='W')
+            self.label_2.grid(column=0, row=2, columnspan=2, sticky='E', padx=8)
+            self.input_2.grid(column=2, row=2, sticky='W')
 
         options_radios = [self.option_radio_1, self.option_radio_2, self.option_radio_3,
                           self.option_radio_4, self.option_radio_5, self.option_radio_6]
@@ -260,23 +276,26 @@ class Caesar(Stage):
         self.shift_var = tk.IntVar(value=0)
         self.update_vars.extend([0, 0])
 
-    def setup(self, frame, constants):
-        super().setup(self, frame, constants)
+    def setup(self, frame, constants, font):
+        super().setup(self, frame, constants, font)
         self.encode_switch = ctk.CTkSwitch(frame, text=self.texts['encode'], onvalue=1, offvalue=0,
-                                    variable=self.encode_var)
-        self.shift_slider = ctk.CTkSlider(frame, from_=0, to=25, number_of_steps=25, width=375,
-                                          variable=self.shift_var)
-        self.label = ctk.CTkLabel(frame, text=self.texts['label'] + ' ' + str(self.shift_var.get()))
-        self.text = ctk.CTkEntry(frame)
-        self.shift_var.trace('w', self.trace_update)
+                                    variable=self.encode_var, font=self.font)
+        self.shift_slider = CustomSlider(frame, from_=0, to=25, number_of_steps=25, width=375,
+                                         variable=self.shift_var, slider_cb=self.update_label,
+                                         var_cb=self.update_shift, loop=True)
+        self.label = ctk.CTkLabel(frame, text=self.texts['label'] + ' ' + str(self.shift_var.get()),
+                                  font=self.font)
+        self.text = ctk.CTkEntry(frame, font=self.font)
         self.encode_var.trace('w', self.trace_update)
 
+    def update_label(self, variable, value): 
+        self.label.configure(text=self.texts['label'] + ' ' + str(value))
+
+    def update_shift(self, variable, value):
+        self.update_vars[1] = value
+        self.update_output(self)
+
     def trace_update(self, var_name, index, mode):
-        if var_name == str(self.shift_var):
-            self.label.configure(text=self.texts['label'] + ' ' + str(self.shift_var.get()))
-            self.update_vars[1] = self.shift_var.get()
-        else:
-            self.update_vars[0] = self.encode_var.get()
         self.update_output(self)
 
     @staticmethod
@@ -313,29 +332,27 @@ class Substitution(Stage):
         self.substitutions = {}
         self.update_vars.extend([0, {}])
         
-    def setup(self, frame, constants):
-        super().setup(self, frame, constants)
+    def setup(self, frame, constants, font):
+        super().setup(self, frame, constants, font)
         self.encode_switch = ctk.CTkSwitch(frame, text=self.texts['encode'], onvalue=1, offvalue=0,
-                                           variable=self.encode_var)
-        self.input_1 = ctk.CTkEntry(frame, width=60)
-        self.label = ctk.CTkLabel(frame, text='->', width=20)
-        self.input_2 = ctk.CTkEntry(frame, width=60)
-        self.button_1 = ctk.CTkButton(frame, text=self.texts['button_1'], width=110)
-        self.button_2 = ctk.CTkButton(frame, text=self.texts['button_2'], width=110)
-        self.textbox = tk.Text(frame, bd=0, bg=self.constants.theme['color']['entry'][self.constants.mode],
-                               fg=constants.theme['color']['text'][self.constants.mode], width=12, state='disabled',
-                               insertbackground=self.constants.theme['color']['text'][self.constants.mode],
-                               selectbackground=self.constants.theme['color']['entry'][self.constants.mode])
-        self.scrollbar = ctk.CTkScrollbar(frame, command=self.textbox.yview, hover=False, height=350)
-        self.textbox.configure(yscrollcommand=self.scrollbar.set)
-        self.keyword = ctk.CTkButton(frame, text=self.texts['keyword'], command=self.get_keyword)
+                                           variable=self.encode_var, font=self.font)
+        self.input_1 = ctk.CTkEntry(frame, width=60, font=self.font)
+        self.label = ctk.CTkLabel(frame, text='->', width=20, font=self.font)
+        self.input_2 = ctk.CTkEntry(frame, width=60, font=self.font)
+        self.button_1 = ctk.CTkButton(frame, text=self.texts['button_1'], width=110, font=self.font,
+                                      command=self.substitute)
+        self.button_2 = ctk.CTkButton(frame, text=self.texts['button_2'], width=110, font=self.font,
+                                      command=self.unsubstitute)
+        self.textbox = DisplayText(frame, width=110, height=435, font=self.font)
+        self.keyword = ctk.CTkButton(frame, text=self.texts['keyword'], command=self.get_keyword,
+                                     font=self.font)
 
         self.input_1.bind('<Tab>', lambda event: self.tab_order(0))
         self.input_2.bind('<Tab>', lambda event: self.tab_order(1))
         self.button_1.bind('<Tab>', lambda event: self.tab_order(2))
         self.button_2.bind('<Tab>', lambda event: self.tab_order(3))
-        self.button_1.bind('<space>', self.subsitute)
-        self.button_2.bind('<space>', self.unsubsitute)
+        self.button_1.bind('<space>', self.substitute)
+        self.button_2.bind('<space>', self.unsubstitute)
         self.textbox.bind('<Control-c>', self.copy)
         self.textbox.bind('<Control-v>', self.paste)
         self.encode_var.trace('w', self.encode_switch_update)
@@ -350,28 +367,30 @@ class Substitution(Stage):
     def get_keyword(self):
         dialog = ctk.CTkInputDialog(text=self.texts['keyword'] + ':', title=self.texts['keyword'])
         keyword = dialog.get_input()
-        keyword = ''.join(list({x.lower(): None for x in keyword if x.lower() in self.constants.alphabet}))
+        keyword = {x.lower(): None for x in keyword if x.lower() in self.constants.alphabet}
+        keyword = ''.join(list(keyword))
+        self.substitutions = {}
         
         key_index = 0
         value_index = 0
-        self.substitutions = {}
+        while key_index < len(keyword):
+            self.substitutions[self.constants.alphabet[key_index].upper()] = keyword[value_index]
+
+            key_index += 1
+            value_index += 1
+
+        value_index = 0
         while key_index < len(self.constants.alphabet):
-            value_index = value_index % 26
-            
-            if value_index < len(keyword):
-                self.substitutions[self.constants.alphabet[key_index].upper()] = keyword[value_index]
+            if self.constants.alphabet[value_index] in self.substitutions.values():
+                value_index += 1
+                continue
             else:
-                if self.constants.alphabet[value_index] in self.substitutions.values():
-                    value_index += 1
-                    continue
-                else:
-                    v = self.constants.alphabet[value_index]
-                    self.substitutions[self.constants.alphabet[key_index].upper()] = v
+                v = self.constants.alphabet[value_index]
+                self.substitutions[self.constants.alphabet[key_index].upper()] = v
 
             key_index += 1
             value_index += 1
                     
-
         self.update_vars[1] = self.substitutions
         self.update_substitutions()
         self.update_output(self)
@@ -380,7 +399,8 @@ class Substitution(Stage):
         if index == 0:
             if self.encode_var.get():
                 self.button_1.focus()
-                self.button_1.configure(fg_color=self.constants.theme['color']['button_hover'][self.constants.mode])
+                hover_color = self.constants.theme['color']['button_hover'][self.constants.mode]
+                self.button_1.configure(fg_color=hover_color)
             else:
                 self.input_2.focus()
                 return
@@ -392,27 +412,31 @@ class Substitution(Stage):
                 return
             else:
                 self.button_1.focus()
-                self.button_1.configure(fg_color=self.constants.theme['color']['button_hover'][self.constants.mode])
+                hover_color = self.constants.theme['color']['button_hover'][self.constants.mode]
+                self.button_1.configure(fg_color=hover_color)
         
         elif index == 2:
             self.button_2.focus()
-            self.button_1.configure(fg_color=self.constants.theme['color']['button'][self.constants.mode])
-            self.button_2.configure(fg_color=self.constants.theme['color']['button_hover'][self.constants.mode])
+            default_color = self.constants.theme['color']['button'][self.constants.mode]
+            hover_color = self.constants.theme['color']['button_hover'][self.constants.mode]
+            self.button_1.configure(fg_color=default_color)
+            self.button_2.configure(fg_color=hover_color)
         
         elif index == 3:
+            default_color = self.constants.theme['color']['button'][self.constants.mode]
             if self.encode_var.get():
                 self.input_1.configure(state='disabled')
                 self.input_2.focus()
-                self.button_2.configure(fg_color=self.constants.theme['color']['button'][self.constants.mode])
+                self.button_2.configure(fg_color=default_color)
                 return
             else:
                 self.input_1.focus()
-                self.button_2.configure(fg_color=self.constants.theme['color']['button'][self.constants.mode])
+                self.button_2.configure(fg_color=default_color)
                 return
 
         return 'break'
 
-    def subsitute(self, event):
+    def substitute(self, *args):
         input_1 = self.input_1.get()
         input_2 = self.input_2.get()
             
@@ -428,7 +452,7 @@ class Substitution(Stage):
         self.update_substitutions()
         self.update_output(self)
 
-    def unsubsitute(self, event):
+    def unsubstitute(self, *args):
         input_1 = self.input_1.get()
         input_2 = self.input_2.get()
             
@@ -516,8 +540,7 @@ class Substitution(Stage):
         self.button_1.grid(row=0, column=4, pady=12, sticky='S')
         self.button_2.grid(row=1, column=4, pady=12, sticky='N')
         self.keyword.grid(row=1, column=1, columnspan=3)
-        self.textbox.grid(row=0, column=5, rowspan=2, columnspan=2, pady=120)
-        self.scrollbar.grid(row=0, column=6, rowspan=2, pady=120, sticky='E')
+        self.textbox.grid(row=0, column=5, rowspan=2, columnspan=2)
         self.encode_switch.grid(row=1, column=6, padx=15, pady=15, sticky='SE')
 
         self.button_1.configure(fg_color=self.constants.theme['color']['button'][self.constants.mode])
@@ -531,34 +554,41 @@ class Affine(Stage):
         self.beta_var = tk.IntVar(value=0)
         self.update_vars.extend([0, 0, 0])
 
-    def setup(self, frame, constants):
-        super().setup(self, frame, constants)
+    def setup(self, frame, constants, font):
+        super().setup(self, frame, constants, font)
+        self.update_vars[1] = list(self.constants.inverses.keys())[self.alpha_var.get()]
+
         self.encode_switch = ctk.CTkSwitch(frame, text=self.texts['encode'], onvalue=1, offvalue=0,
-                                           variable=self.encode_var)
-        self.alpha_label = ctk.CTkLabel(frame)
-        self.beta_label = ctk.CTkLabel(frame)
-        self.alpha_slider = ctk.CTkSlider(frame, from_=0, to=11, number_of_steps=11, width=375,
-                                          variable=self.alpha_var)
-        self.beta_slider = ctk.CTkSlider(frame, from_=0, to=25, number_of_steps=25, width=375,
-                                         variable=self.beta_var)
-        self.alpha_var.trace('w', self.input_update)
-        self.beta_var.trace('w', self.input_update)
-        self.encode_var.trace('w', self.input_update)
-        self.input_update(str(self.alpha_var), False, False, update=False)
-        self.input_update(str(self.beta_var), False, False, update=False)
+                                           variable=self.encode_var, font=self.font)
+        self.alpha_label = ctk.CTkLabel(frame, text=(self.texts['alpha_label']
+                                             + ' ' + str(self.update_vars[1])), font=self.font)
+        self.beta_label = ctk.CTkLabel(frame, text=(self.texts['beta_label']
+                                                    + ' ' + str(self.update_vars[2])),
+                                       font=self.font)
+        self.alpha_slider = CustomSlider(frame, from_=0, to=11, number_of_steps=11, width=375,
+                                         variable=self.alpha_var, slider_cb=self.label_update,
+                                         var_cb=lambda *args: self.update_output(self))
+        self.beta_slider = CustomSlider(frame, from_=0, to=25, number_of_steps=25, width=375,
+                                        variable=self.beta_var, slider_cb=self.label_update,
+                                        var_cb=lambda *args: self.update_output(self), loop=True)
+        self.encode_var.trace('w', self.encode_update)
    
-    def input_update(self, var, index, mode, update=True):
-        if var == str(self.alpha_var):
+    def label_update(self, variable, value):
+        if variable == self.alpha_var:
             self.update_vars[1] = list(self.constants.inverses.keys())[self.alpha_var.get()]
-            self.alpha_label.configure(text=self.texts['alpha_label'] + ' ' + str(self.update_vars[1]))
-        elif var == str(self.beta_var):
+            self.alpha_label.configure(text=(self.texts['alpha_label']
+                                             + ' ' + str(self.update_vars[1])))
+        else:
+            if self.beta_var.get() == 0 and self.update_vars[2] == 25:
+                self.alpha_var.set((self.alpha_var.get() + 1) % 12)
+            elif self.beta_var.get() == 25 and self.update_vars[2] == 0:
+                self.alpha_var.set((self.alpha_var.get() - 1) % 12)
             self.update_vars[2] = self.beta_var.get()
             self.beta_label.configure(text=self.texts['beta_label'] + ' ' + str(self.update_vars[2]))
-        else:
-            self.update_vars[0] = self.encode_var.get()
 
-        if update:
-            self.update_output(self)
+    def encode_update(self, *args):
+        self.update_vars[0] = self.encode_var.get()
+        self.update_output(self)
 
     @staticmethod
     def update(text, constants, encode, alpha, beta):
@@ -568,7 +598,8 @@ class Affine(Stage):
                 if encode:
                     index = (constants.alphabet.index(letter.lower()) * alpha + beta) % 26
                 else:
-                    index = ((constants.alphabet.index(letter.lower()) - beta) * constants.inverses[alpha]) % 26
+                    index = ((constants.alphabet.index(letter.lower()) - beta)
+                             * constants.inverses[alpha]) % 26
                 shifted_letter = constants.alphabet[index]
                 if encode:
                     shifted_letter = shifted_letter.upper()
@@ -603,18 +634,20 @@ class Vigenere(Stage):
         self.input_locked = True
         self.input_delay = False
 
-    def setup(self, frame, constants):
-        super().setup(self, frame, constants)
-        self.kw_len_label = ctk.CTkLabel(frame, text=self.texts['keyword_length'])
-        self.kw_label = ctk.CTkLabel(frame, text=self.texts['keyword_contents'])
+    def setup(self, frame, constants, font):
+        super().setup(self, frame, constants, font)
+        self.kw_len_label = ctk.CTkLabel(frame, text=self.texts['keyword_length'], font=self.font)
+        self.kw_label = ctk.CTkLabel(frame, text=self.texts['keyword_contents'], font=self.font)
         self.kw_len_input = ctk.CTkEntry(frame, textvariable=self.keyword_length, width=30,
-                                         justify='center', takefocus=0)
-        self.kw_input = ctk.CTkEntry(frame, textvariable=self.keyword_contents, width=55)       
+                                         justify='center', takefocus=0, font=self.font)
+        self.kw_input = ctk.CTkEntry(frame, textvariable=self.keyword_contents, width=55,
+                                     font=self.font)       
         self.radio_vigenere = ctk.CTkRadioButton(frame, variable=self.mode, value=0,
-                                                 text=self.texts['radio_vigenere'])
+                                                 text=self.texts['radio_vigenere'], font=self.font)
         self.radio_beaufort = ctk.CTkRadioButton(frame, variable=self.mode, value=1,
-                                               text=self.texts['radio_beaufort'])
-        self.encode_switch = ctk.CTkSwitch(frame, variable=self.encode, text=self.texts['encode'])
+                                               text=self.texts['radio_beaufort'], font=self.font)
+        self.encode_switch = ctk.CTkSwitch(frame, variable=self.encode, text=self.texts['encode'],
+                                           font=self.font)
         self.kw_len_input.bind('<MouseWheel>', self.scroll_length)
         self.kw_input.bind('<Button-1>', lambda e: self.frame.after(0, self.select_left))
         self.kw_input.bind('<Key>', self.kw_keypress_event)
@@ -647,7 +680,10 @@ class Vigenere(Stage):
         if event.delta > 0:
             self.keyword_length.set(str(min(int(self.keyword_length.get()) + 1, 15)))
         else:
-            self.keyword_length.set(str(max(int(self.keyword_length.get()) - 1, 1)))
+            if self.keyword_length.get() == '1':
+                self.update_keyword(keyword='A')
+            else:
+                self.keyword_length.set(str(max(int(self.keyword_length.get()) - 1, 1)))
 
     def update_mode(self, var, index, mode):
         if var == str(self.encode):
