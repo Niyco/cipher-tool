@@ -418,6 +418,7 @@ class App():
         self.root.update()
         self.stage_scroll(None)
         self.current_stages[0][0].input_widget.delete(1.0, 'end')
+        self.display_font.configure(size=self.custom_font.cget('size'))
 
     def font_size_down(self, amount):
         font_size = self.display_font.cget('size')
