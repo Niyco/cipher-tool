@@ -126,6 +126,15 @@ class Constants:
     max_word_length = None
     word_frequencies = None
     
+    def named_to_hex(self, color, widget):
+        if color.startswith('#'):
+            return color
+        color_hex = '#'
+        for value in widget.winfo_rgb(color):
+            color_hex += format(value // 256, '02X')
+        
+        return color_hex
+
     def load(self):
         theme_file = open(self.theme_path + self.theme_name + '.json', encoding='utf-8')
         self.theme = json.load(theme_file)

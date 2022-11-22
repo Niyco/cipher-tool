@@ -651,6 +651,11 @@ class Vigenere(Stage):
         self.kw_len_input.bind('<MouseWheel>', self.scroll_length)
         self.kw_input.bind('<Button-1>', lambda e: self.frame.after(0, self.select_left))
         self.kw_input.bind('<Key>', self.kw_keypress_event)
+        self.tabs = []
+        frame_color = self.constants.theme['color']['frame_high'][self.constants.mode]
+        self.tabview = ctk.CTkTabview(self.frame, fg_color=frame_color, border_width=2)
+        for i in range(self.update_vars[2]):
+            self.add_tab(len(self.tabs), 'A')
     
     def kw_keypress_event(self, event):
         if self.input_locked:
@@ -699,18 +704,25 @@ class Vigenere(Stage):
             length = int(length)
             if 0 < length and length < 16:
                 previous = self.update_vars[2]
+                difference = abs(length - previous)
                 if length > previous:
+                    for i in range(difference):
+                        self.add_tab(len(self.tabs), 'A')
                     new_keyword = self.keyword_contents.get() + 'A' * (length - previous)
+                    update = False
                 elif length < previous:
+                    for i in range(difference):
+                        self.remove_tab(-1)
                     new_keyword = self.keyword_contents.get()[:(length - previous)]
+                    update = True
                 else:
                     return
 
                 self.update_vars[2] = length
                 self.kw_input.configure(width=13 + 8 * length)
-                self.update_keyword(keyword=new_keyword)
+                self.update_keyword(keyword=new_keyword, update=update)
 
-    def update_keyword(self, *args, keyword=''):
+    def update_keyword(self, *args, keyword='', update=True):
         prev_keyword = self.update_vars[3]
 
         if not keyword:
@@ -718,7 +730,12 @@ class Vigenere(Stage):
             len_difference = self.update_vars[2] - len(keyword)
             if len_difference > 1:
                 self.keyword_contents.set(self.keyword_contents.get() + 'A' * (len_difference - 1))
-            elif len_difference != 0:
+                return
+            elif len_difference < 0:
+                keyword = keyword[:-1]
+                self.keyword_contents.set(keyword)
+                return
+            elif len_difference == 1:
                 return
         else:
             self.keyword_contents.set(keyword)
@@ -728,17 +745,136 @@ class Vigenere(Stage):
         self.input_locked = False
         self.frame.master.event_generate('<Shift-Left>')
         self.update_vars[3] = keyword
-        self.update_output(self)
+        
+        tabs_keyword = ''.join([e[0] for e in self.tabs])
+        if len(tabs_keyword) == len(keyword):
+            for i, c in enumerate(keyword):
+                if c != tabs_keyword[i]:
+                    self.remove_tab(i)
+                    self.add_tab(i, c)
+                    self.set_tab(i)
+        
+        if update:
+            self.update_output(self)
+
+    def set_tab(self, index):
+        if index < 0:
+            relative_index = len(self.tabs) + index + 1
+        else:
+            relative_index = index + 1
+        self.tabview.set(f'{relative_index}: {self.tabs[index][0]}')
+
+    def remove_tab(self, index):
+        if index < 0:
+            relative_index = len(self.tabs) + index + 1
+        else:
+            relative_index = index + 1
+        self.tabview.delete(f'{relative_index}: {self.tabs[index][0]}')
+        self.tabs.pop(index)
+
+    def add_tab(self, index, letter):
+        if index < 0:
+            relative_index = len(self.tabs) + index + 1
+        else:
+            relative_index = index + 1
+        tab = self.tabview.insert(index, f'{relative_index}: {letter}')
+        
+        bg = self.constants.theme['color']['frame_high'][self.constants.mode]
+        canvas = tk.Canvas(tab, highlightthickness=0, bg=bg)
+        canvas.bind('<Configure>', self.update_graph)
+        slider = CustomSlider(tab, from_=0, to=25, number_of_steps=25,
+                              variable=tk.IntVar(value=self.constants.alphabet.index(letter.lower())),
+                              slider_cb=self.slider_update)
+        tab.rowconfigure(0, weight=1)
+        tab.columnconfigure(0, weight=1)
+        canvas.grid(row=0, column=0, pady=10, sticky='NSEW')
+        slider.grid(row=1, column=0, padx=2, sticky='EW')
+        self.tabs.insert(index, (letter, tab, canvas))
+
+    def slider_update(self, variable, value):
+        new_contents = list(self.keyword_contents.get())
+        new_contents[int(self.tabview.get()[0]) - 1] = self.constants.alphabet[value].upper()
+        self.keyword_contents.set(''.join(new_contents))
+        
+    def update_graph(self, event):
+        if event:
+            canvas = event.widget
+            height = event.height
+            width = event.width
+        else:
+            canvas = self.tabs[int(self.tabview.get()[0]) - 1][2]
+            height = canvas.winfo_height()
+            width = canvas.winfo_width()
+
+        shift = self.constants.alphabet.index(self.tabview.get()[3].lower())
+        encrypted_frequencies = self.frequencies[int(self.tabview.get()[0]) - 1]
+        encrypted_frequencies = encrypted_frequencies[shift:] + encrypted_frequencies[:shift]
+        plaintext_multi = height / list(self.constants.letter_frequencies.values())[0] // 2.1
+        if max(encrypted_frequencies) > 0:
+            encrypted_multi = min(height / max(encrypted_frequencies) // 2.1, plaintext_multi)
+        else:
+            encrypted_multi = 1
+        encrypted_frequencies = [x * encrypted_multi for x in encrypted_frequencies]
+        encrypted_coords = self.cal_graph(width, height // 2, encrypted_frequencies)
+        objects = canvas.find_all()
+        if event:
+            plaintext_frequencies = sorted(self.constants.letter_frequencies.items(), key=lambda e: e[0])
+            plaintext_frequencies = [x[1] * plaintext_multi for x in plaintext_frequencies]
+            plaintext_coords = self.cal_graph(width, height, plaintext_frequencies)
+
+        if objects:
+            for i, obj in enumerate(objects[len(objects) // 2:]):
+                canvas.coords(obj, *encrypted_coords[i])
+            if event:
+                for i, obj in enumerate(objects[:len(objects) // 2]):
+                    canvas.coords(obj, *plaintext_coords[i])
+
+        elif event:
+            for coords in plaintext_coords:
+                canvas.create_rectangle(*coords)
+            for coords in encrypted_coords:
+                canvas.create_rectangle(*coords)
+        
+    def cal_graph(self, width, height, frequencies):
+        width -= 3
+        alphabet_length = len(self.constants.alphabet)
+        padding = 2
+        space = alphabet_length * padding
+
+        coords = []
+        bar_width = (width - space) // alphabet_length
+        bar_extra = (width - space) % alphabet_length
+        bar_space = padding + bar_width
+        for i in range(alphabet_length):
+            bar_height = frequencies[i]
+            coords.append((i * (bar_space) + padding + min(i, bar_extra),
+                           height - 3,
+                           i * (bar_space) + padding + bar_width + min(i + 1, bar_extra),
+                           height - bar_height - 4))
+        
+        return coords
+
+    def update_widgets(self, frequencies):
+        self.frequencies = frequencies
+        self.update_graph(None)
 
     @staticmethod
     def update(text, constants, encode, mode, keyword_length, keyword_contents):
+        if len(text) >= keyword_length:
+            frequencies = []
+            for i in range(keyword_length):
+                split = ''.join([text[j] for j in range(i, len(text), keyword_length)]).lower()
+                frequencies.append([split.count(letter) / len(split) for letter in constants.alphabet])
+        else:
+            frequencies = [[0] * len(constants.alphabet)] * keyword_length
+
         if mode:
             cal_char = lambda char, key: key - char
         elif encode:
             cal_char = lambda char, key: char + key
         else:
             cal_char = lambda char, key: char - key
-
+        
         result = ''
         for index, letter in enumerate(text):
             if letter.lower() in constants.alphabet:
@@ -751,7 +887,7 @@ class Vigenere(Stage):
                 result += new_letter
             else:
                 result += letter
-        return (result, ())
+        return (result, (frequencies,))
 
     def display(self):
         self.frame.rowconfigure(4, minsize=100)
@@ -763,4 +899,5 @@ class Vigenere(Stage):
         self.kw_input.grid(column=0, row=3)
         self.radio_vigenere.grid(column=0, row=5, padx=25, pady=6, sticky='W')
         self.radio_beaufort.grid(column=0, row=6, padx=25, pady=6, sticky='W')
-        self.encode_switch.grid(column=1, row=7, padx=15, pady=15, sticky='SE')
+        self.tabview.grid(column=1, row=0, rowspan=8, padx=15, pady=5, sticky='NESW')
+        self.encode_switch.grid(column=1, row=8, padx=15, pady=15, sticky='SE')

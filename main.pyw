@@ -199,12 +199,14 @@ class App():
         colors = self.constants.theme['color']
         mode = self.constants.mode
         lang = self.constants.lang
+        named_to_hex = self.constants.named_to_hex
 
         self.toolbar_stages_pos = 0
         self.stages_pos = 0
         self.loading = False
         self.font_size_held = False
-        bg_color = self.named_to_hex(colors['bg_color'][mode])
+        root = self.root
+        bg_color = named_to_hex(colors['bg_color'][mode], root)
 
         self.toolbar = ctk.CTkFrame(self.root, fg_color=bg_color)
         self.toolbar.grid_propagate(0)
@@ -225,17 +227,17 @@ class App():
         radio_text_button = ctk.CTkButton(toolbar_radio, text=lang['radio_text'], height=24,
                                           corner_radius=10, command=lambda: self.radio_select(0),
                                           fg_color=colors['deselected'][mode], hover=False,
-                                          text_color=self.named_to_hex(colors['text'][mode]),
+                                          text_color=named_to_hex(colors['text'][mode], root),
                                           font=self.custom_font)
         radio_analysis_button = ctk.CTkButton(toolbar_radio, text=lang['radio_analysis'], height=24,
                                               corner_radius=10, command=lambda: self.radio_select(1),
                                               fg_color=colors['deselected'][mode], hover=False,
-                                              text_color=self.named_to_hex(colors['text'][mode]),
+                                              text_color=named_to_hex(colors['text'][mode], root),
                                               font=self.custom_font)
         radio_cipher_button = ctk.CTkButton(toolbar_radio, text=lang['radio_cipher'], height=24,
                                             corner_radius=10, command=lambda: self.radio_select(2),
                                             fg_color=colors['deselected'][mode], hover=False,
-                                            text_color=self.named_to_hex(colors['text'][mode]),
+                                            text_color=named_to_hex(colors['text'][mode], root),
                                             font=self.custom_font)
         radio_text_button.place(x=-10, y=0)
         radio_analysis_button.place(x=-10, y=24)
@@ -278,11 +280,12 @@ class App():
         self.stages_canvas.grid(row=3, column=1, sticky='NESW')
         self.stages_canvas.bind('<MouseWheel>', self.stage_scroll)
         self.stages_canvas.create_rectangle(225, 0, 225, 0, outline=colors['deselected'][mode])
-        self.stage_frame = ctk.CTkFrame(self.root, fg_color=self.named_to_hex(colors['entry'][mode]))
+        self.stage_frame = ctk.CTkFrame(self.root, fg_color=named_to_hex(colors['entry'][mode],
+                                                                         root))
         self.stage_frame.grid(row=2, column=0, rowspan=2, sticky='NESW')
         self.stage_frame.grid_propagate(0)
         self.loading_animation_label = ctk.CTkLabel(self.stage_frame, text='')
-        output_frame = ctk.CTkFrame(self.root, fg_color=self.named_to_hex(colors['entry'][mode]))
+        output_frame = ctk.CTkFrame(self.root, fg_color=named_to_hex(colors['entry'][mode], root))
         output_frame.grid(row=2, column=2, rowspan=2, sticky='NESW')
         output_frame.rowconfigure(0, weight=1)
         output_frame.columnconfigure(0, weight=1)
@@ -389,15 +392,6 @@ class App():
 
         return ctk.CTkImage(light_image=image, size=image.size)
 
-    def named_to_hex(self, color):
-        if color.startswith('#'):
-            return color
-        color_hex = '#'
-        for value in self.root.winfo_rgb(color):
-            color_hex += format(value // 256, '02X')
-        
-        return color_hex
-
     def adjust(self, color, amount):
         new_hex = '#'
         for i in range(2, 8, 2):
@@ -442,8 +436,8 @@ class App():
     def radio_select(self, button):
         colors = self.constants.theme['color']
         mode = self.constants.mode
-        bg_color = self.named_to_hex(colors['bg_color'][mode])
-        button_color = self.named_to_hex(colors['button'][mode])
+        bg_color = self.constants.named_to_hex(colors['bg_color'][mode], self.root)
+        button_color = self.constants.named_to_hex(colors['button'][mode], self.root)
         
         self.radio_buttons[self.radio_selected].configure(fg_color=colors['deselected'][mode],
                                                           hover_color=colors['deselected'][mode])
@@ -622,7 +616,7 @@ class App():
         colors = self.constants.theme['color']
         length = len(self.stage_positions.keys())
         display_name = self.constants.lang['stage_' + name.lower()]['name']
-        bg_color = self.named_to_hex(colors['bg_color'][self.constants.mode])
+        bg_color = self.constants.named_to_hex(colors['bg_color'][self.constants.mode], self.root)
 
         y = 40 * length + 36 // 2
         self.stages_last = max(self.stages_last, y + 36 // 2)
