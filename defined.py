@@ -3,6 +3,29 @@ import darkdetect
 import json
 import sys
 
+class InsertEntry(ctk.CTkEntry):
+    def __init__(self, *args, **kwargs):
+        self.alphabet = kwargs.pop('alphabet')
+        if 'cb' in kwargs:
+            self.cb = kwargs.pop('cb')
+        else:
+            self.cb = lambda value: None
+
+        super().__init__(*args, **kwargs)
+        self.bind('<Key>', self.type)
+
+    def type(self, event):
+        if event.send_event:
+            if event.keysym.lower() in self.alphabet:
+                pos = min(self.index('insert'), len(self.get()) - 1)
+                self.select_range(pos, pos + 1)
+                self.event_generate(f'<{event.keysym.upper()}>')
+                self.cb(self.get())
+            elif event.keysym == 'Left' or event.keysym == 'Right':
+                return
+            
+            return 'break'
+
 class DisplayText(ctk.CTkTextbox):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

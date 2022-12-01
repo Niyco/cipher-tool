@@ -1,4 +1,4 @@
-from defined import Stage, CustomSlider, DisplayText
+from defined import Stage, CustomSlider, DisplayText, InsertEntry
 import tkinter as tk
 import customtkinter as ctk
 import unicodedata
@@ -625,14 +625,10 @@ class Vigenere(Stage):
         self.encode = tk.IntVar(value=0)
         self.mode = tk.IntVar(value=0)
         self.keyword_length = tk.StringVar(value='5')
-        self.keyword_contents = tk.StringVar(value='AAAAA')
         self.encode.trace('w', self.update_mode)
         self.mode.trace('w', self.update_mode)
         self.keyword_length.trace('w', self.update_key_length)
-        self.keyword_contents.trace('w', self.update_keyword)
         self.update_vars.extend([0, 0, 5, 'AAAAA'])
-        self.input_locked = True
-        self.input_delay = False
 
     def setup(self, frame, constants, font):
         super().setup(self, frame, constants, font)
@@ -640,53 +636,30 @@ class Vigenere(Stage):
         self.kw_label = ctk.CTkLabel(frame, text=self.texts['keyword_contents'], font=self.font)
         self.kw_len_input = ctk.CTkEntry(frame, textvariable=self.keyword_length, width=30,
                                          justify='center', takefocus=0, font=self.font)
-        self.kw_input = ctk.CTkEntry(frame, textvariable=self.keyword_contents, width=55,
-                                     font=self.font)       
+        self.kw_input = InsertEntry(frame, width=55, font=self.font, cb=self.update_keyword,
+                                    alphabet=self.constants.alphabet)
         self.radio_vigenere = ctk.CTkRadioButton(frame, variable=self.mode, value=0,
                                                  text=self.texts['radio_vigenere'], font=self.font)
         self.radio_beaufort = ctk.CTkRadioButton(frame, variable=self.mode, value=1,
                                                text=self.texts['radio_beaufort'], font=self.font)
         self.encode_switch = ctk.CTkSwitch(frame, variable=self.encode, text=self.texts['encode'],
                                            font=self.font)
+        self.kw_input.insert(0, self.update_vars[3])
         self.kw_len_input.bind('<MouseWheel>', self.scroll_length)
-        self.kw_input.bind('<Button-1>', lambda e: self.frame.after(0, self.select_left))
-        self.kw_input.bind('<Key>', self.kw_keypress_event)
         self.tabs = []
         frame_color = self.constants.theme['color']['frame_high'][self.constants.mode]
         self.tabview = ctk.CTkTabview(self.frame, fg_color=frame_color, border_width=2)
         for i in range(self.update_vars[2]):
             self.add_tab(len(self.tabs), 'A')
-    
-    def kw_keypress_event(self, event):
-        if self.input_locked:
-            if self.input_delay or event.keysym.lower() not in self.constants.alphabet:
-                return 'break'
-
-            self.input_delay = True
-            self.frame.after(1, self.remove_input_delay)
-            if event.keysym in self.constants.alphabet:
-                self.input_locked = False
-                self.frame.event_generate(f'<{event.keysym.upper()}>')
-                return 'break'
-            
-        else:
-            self.input_locked = True
-    
-    def remove_input_delay(self):
-        self.input_delay = False
-
-    def select_left(self):
-        self.input_locked = False
-        self.frame.event_generate('<Left>')
-        self.input_locked = False
-        self.frame.event_generate('<Shift-Right>')
 
     def scroll_length(self, event):
         if event.delta > 0:
             self.keyword_length.set(str(min(int(self.keyword_length.get()) + 1, 15)))
         else:
             if self.keyword_length.get() == '1':
-                self.update_keyword(keyword='A')
+                self.kw_input.delete(0, 1)
+                self.kw_input.insert(0, 'A')
+                self.update_keyword('A')
             else:
                 self.keyword_length.set(str(max(int(self.keyword_length.get()) - 1, 1)))
 
@@ -697,7 +670,7 @@ class Vigenere(Stage):
             self.update_vars[1] = self.mode.get()
                                                         
         self.update_output(self)
-                                                        
+
     def update_key_length(self, *args):
         length = self.keyword_length.get()
         if length.isnumeric():
@@ -705,72 +678,48 @@ class Vigenere(Stage):
             if 0 < length and length < 16:
                 previous = self.update_vars[2]
                 difference = abs(length - previous)
+
                 if length > previous:
                     for i in range(difference):
                         self.add_tab(len(self.tabs), 'A')
-                    new_keyword = self.keyword_contents.get() + 'A' * (length - previous)
-                    update = False
+                    self.update_vars[2] = length
+                    self.kw_input.configure(width=13 + 8 * length)
+                    self.kw_input.insert('end', 'A' * difference)
+
                 elif length < previous:
                     for i in range(difference):
-                        self.remove_tab(-1)
-                    new_keyword = self.keyword_contents.get()[:(length - previous)]
-                    update = True
-                else:
-                    return
-
-                self.update_vars[2] = length
-                self.kw_input.configure(width=13 + 8 * length)
-                self.update_keyword(keyword=new_keyword, update=update)
-
-    def update_keyword(self, *args, keyword='', update=True):
-        prev_keyword = self.update_vars[3]
-
-        if not keyword:
-            keyword = self.keyword_contents.get()
-            len_difference = self.update_vars[2] - len(keyword)
-            if len_difference > 1:
-                self.keyword_contents.set(self.keyword_contents.get() + 'A' * (len_difference - 1))
-                return
-            elif len_difference < 0:
-                keyword = keyword[:-1]
-                self.keyword_contents.set(keyword)
-                return
-            elif len_difference == 1:
-                return
-        else:
-            self.keyword_contents.set(keyword)
-        
-        self.input_locked = False
-        self.frame.master.event_generate('<Right>')
-        self.input_locked = False
-        self.frame.master.event_generate('<Shift-Left>')
-        self.update_vars[3] = keyword
-        
+                        relative_index = len(self.tabs) + i
+                        self.tabview.delete(f'{relative_index}: {self.tabs[relative_index - 1][0]}')
+                        self.tabs.pop(i)
+                    self.update_vars[2] = length
+                    self.kw_input.configure(width=13 + 8 * length)
+                    self.kw_input.delete(length - difference + 1, 'end')
+                
+    def update_keyword(self, keyword, update=True): 
         tabs_keyword = ''.join([e[0] for e in self.tabs])
-        if len(tabs_keyword) == len(keyword):
+        if keyword != tabs_keyword:
+            values = list(keyword)
             for i, c in enumerate(keyword):
+                name = f'{i + 1}: {c}'
+                values[i] = name
                 if c != tabs_keyword[i]:
-                    self.remove_tab(i)
-                    self.add_tab(i, c)
-                    self.set_tab(i)
+                    active_tab = name
+                    active_index = i
+                    self.tabs[i][0] = c
+
+            sb = self.tabview._segmented_button
+            sb._buttons_dict = {v: list(sb._buttons_dict.values())[i] for i,
+                                v in enumerate(values)}
+            sb._value_list = values
+            sb._buttons_dict[active_tab].configure(text=active_tab)
+            self.tabview._tab_dict = {v: list(self.tabview._tab_dict.values())[i] for i,
+                                      v in enumerate(values)}
         
-        if update:
-            self.update_output(self)
-
-    def set_tab(self, index):
-        if index < 0:
-            relative_index = len(self.tabs) + index + 1
-        else:
-            relative_index = index + 1
-        self.tabview.set(f'{relative_index}: {self.tabs[index][0]}')
-
-    def remove_tab(self, index):
-        if index < 0:
-            relative_index = len(self.tabs) + index + 1
-        else:
-            relative_index = index + 1
-        self.tabview.delete(f'{relative_index}: {self.tabs[index][0]}')
-        self.tabs.pop(index)
+            self.update_vars[3] = keyword
+            self.tabview.set(active_tab)
+            self.update_graph(None)
+            if update:
+                self.update_output(self)
 
     def add_tab(self, index, letter):
         if index < 0:
@@ -784,17 +733,18 @@ class Vigenere(Stage):
         canvas.bind('<Configure>', self.update_graph)
         slider = CustomSlider(tab, from_=0, to=25, number_of_steps=25,
                               variable=tk.IntVar(value=self.constants.alphabet.index(letter.lower())),
-                              slider_cb=self.slider_update)
+                              slider_cb=self.slider_update, loop=True)
         tab.rowconfigure(0, weight=1)
         tab.columnconfigure(0, weight=1)
         canvas.grid(row=0, column=0, pady=10, sticky='NSEW')
         slider.grid(row=1, column=0, padx=2, sticky='EW')
-        self.tabs.insert(index, (letter, tab, canvas))
+        self.tabs.insert(index, [letter, tab, canvas])
 
     def slider_update(self, variable, value):
-        new_contents = list(self.keyword_contents.get())
-        new_contents[int(self.tabview.get()[0]) - 1] = self.constants.alphabet[value].upper()
-        self.keyword_contents.set(''.join(new_contents))
+        index = int(self.tabview.get()[0]) - 1
+        self.kw_input.delete(index, index + 1)
+        self.kw_input.insert(index, self.constants.alphabet[value].upper())
+        self.update_keyword(self.kw_input.get(), update=False)
         
     def update_graph(self, event):
         if event:
@@ -830,10 +780,11 @@ class Vigenere(Stage):
                     canvas.coords(obj, *plaintext_coords[i])
 
         elif event:
+            color = self.constants.theme['color']['button'][self.constants.mode]
             for coords in plaintext_coords:
                 canvas.create_rectangle(*coords)
             for coords in encrypted_coords:
-                canvas.create_rectangle(*coords)
+                canvas.create_rectangle(*coords, outline=color)
         
     def cal_graph(self, width, height, frequencies):
         width -= 3

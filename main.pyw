@@ -836,7 +836,7 @@ class App():
         returns = []
         for update in updates:
             function, args, analysis = update
-            result = function(text, constants, *args)
+            result = function(text, self.constants, *args)
             returns.append(result)
             if not analysis: text = result[0]
 
