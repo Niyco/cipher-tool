@@ -296,7 +296,7 @@ class CTkTabview(CTkBaseClass):
             if len(self._tab_dict) == 0:
                 self._set_grid_segmented_button()
 
-            self._name_list.insert(index, name)
+            #self._name_list.insert(index, name)
             self._tab_dict[name] = self._create_tab()
             self._segmented_button.insert(index, name)
             self._configure_tab_background_corners_by_name(name)
@@ -329,7 +329,7 @@ class CTkTabview(CTkBaseClass):
         """ delete tab by name """
 
         if name in self._tab_dict:
-            self._name_list.remove(name)
+            #self._name_list.remove(name)
             self._tab_dict[name].grid_forget()
             self._tab_dict.pop(name)
             self._segmented_button.delete(name)

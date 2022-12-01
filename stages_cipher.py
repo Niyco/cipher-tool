@@ -695,7 +695,7 @@ class Vigenere(Stage):
                     self.kw_input.configure(width=13 + 8 * length)
                     self.kw_input.delete(length - difference + 1, 'end')
                 
-    def update_keyword(self, keyword, update=True): 
+    def update_keyword(self, keyword, update=True):
         tabs_keyword = ''.join([e[0] for e in self.tabs])
         if keyword != tabs_keyword:
             values = list(keyword)
@@ -714,6 +714,7 @@ class Vigenere(Stage):
             sb._buttons_dict[active_tab].configure(text=active_tab)
             self.tabview._tab_dict = {v: list(self.tabview._tab_dict.values())[i] for i,
                                       v in enumerate(values)}
+            self.tabview._name_list = values
         
             self.update_vars[3] = keyword
             self.tabview.set(active_tab)
