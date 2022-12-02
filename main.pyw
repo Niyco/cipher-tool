@@ -716,6 +716,7 @@ class App():
         if stage_type != 1 and update:
             self.max_result = self.results[stage_index]
             self.set_output(self.max_result)
+            self.switch_stage(length)
         if update:
             self.root.update()
             self.stage_scroll(None)
