@@ -7,10 +7,10 @@ except ImportError:
     from typing_extensions import Literal
 
 from .scaling_tracker import ScalingTracker
-from ..font.ctk_font import CTkFont
+from ..font import CTkFont
 
 
-class CTkScalingBaseClass():
+class CTkScalingBaseClass:
     """
     Super-class that manages the scaling values and callbacks.
     Works for widgets and windows, type must be set in init method with

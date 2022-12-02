@@ -34,10 +34,12 @@ class Input(Stage):
 
     def setup(self, frame, constants, font):
         super().setup(self, frame, constants, font)
-        colors = constants.theme['color']
         mode = constants.mode
-        self.input_widget = tk.Text(frame, bg=colors['entry'][mode], fg=colors['text'][mode], bd=0,
-                                    wrap='word', font=font, insertbackground=colors['text'][mode])
+        bg_color = constants.theme['CTkEntry']['fg_color'][mode]
+        text_color = constants.theme['CTkLabel']['text_color'][mode]
+
+        self.input_widget = tk.Text(frame, bg=bg_color, fg=text_color, bd=0,
+                                    wrap='word', font=font, insertbackground=text_color)
         self.input_widget.insert(1.0, self.input)
         self.input_widget.bind('<<Modified>>', self.on_modify)
         self.input_widget.bind('<Control-BackSpace>', self.ctrl_backspace)
@@ -139,8 +141,8 @@ class App():
         self.constants.load()
         self.update_constants = True 
 
-        text = self.constants.theme['text'][self.constants.os]
-        paths = self.constants.theme['path']
+        text = self.constants.theme['CTkFont'][self.constants.os]
+        paths = self.constants.theme['Path']
         mode = self.constants.mode
         lang = self.constants.lang
         
@@ -173,9 +175,9 @@ class App():
         self.root.iconphoto(False, icon_image)
         self.root.title(lang['title'])
         
-        self.display_font = ctk.CTkFont(family=text['font'], size=text['size'])
-        self.custom_font = ctk.CTkFont(family=text['font'], size=text['size'])
-        self.stage_font = ctk.CTkFont(family=text['font'], size=text['size'] + 2)
+        self.display_font = ctk.CTkFont(family=text['family'], size=text['size'])
+        self.custom_font = ctk.CTkFont(family=text['family'], size=text['size'])
+        self.stage_font = ctk.CTkFont(family=text['family'], size=text['size'] - 2)
         ctk.set_appearance_mode(self.constants.mode_name)
         self.toolbar_animated = False
         ctk.set_default_color_theme(self.constants.theme_path + self.constants.theme_name + '.json')    
@@ -191,12 +193,12 @@ class App():
     def create_widgets(self):
         def enter_button(button):
             button.configure(cursor='hand2')
-            button.configure(fg_color=colors['button'][mode])
+            button.configure(fg_color=theme['CTkButton']['fg_color'][mode])
         def leave_button(button):
             button.configure(cursor='')
-            button.configure(fg_color=colors['deselected'][mode])
+            button.configure(fg_color=deselected)
 
-        colors = self.constants.theme['color']
+        theme = self.constants.theme
         mode = self.constants.mode
         lang = self.constants.lang
         named_to_hex = self.constants.named_to_hex
@@ -206,12 +208,13 @@ class App():
         self.loading = False
         self.font_size_held = False
         root = self.root
-        bg_color = named_to_hex(colors['bg_color'][mode], root)
+        bg_color = named_to_hex(theme['CTk']['fg_color'][mode], root)
 
         self.toolbar = ctk.CTkFrame(self.root, fg_color=bg_color)
         self.toolbar.grid_propagate(0)
         self.toolbar.columnconfigure(1, weight=1)
         toolbar_radio = ctk.CTkFrame(self.toolbar, fg_color=bg_color, width=180)
+        toolbar_radio.grid(row=0, column=0, sticky='NE')
         toolbar_radio.grid(row=0, column=0, sticky='NE')
         toolbar_menu = ctk.CTkFrame(self.toolbar, fg_color=bg_color, width=250)
         toolbar_menu.grid(row=0, column=2, sticky='NW')
@@ -219,52 +222,51 @@ class App():
         self.toolbar_canvas.grid(row=0, column=1, sticky='EW')
         self.toolbar_canvas.bind('<MouseWheel>', self.toolbar_scroll)
 
-        self.toolbar_canvas.create_rectangle(0, 0, 0, 0, outline=colors['deselected'][mode])
+        self.toolbar_canvas.create_rectangle(0, 0, 0, 0, outline=theme['Custom']['deselected'][mode])
         ctk.CTkButton(toolbar_radio, fg_color='transparent', hover=False, text='',
                       image=self.toolbar_separator_image).place(x=85, y=0)
         ctk.CTkButton(toolbar_menu, fg_color='transparent', hover=False, text='',
                       image=self.toolbar_separator_image).place(x=-45, y=0)
+        text_color = named_to_hex(theme['CTkLabel']['text_color'][mode], root)
+        deselected = theme['Custom']['deselected'][mode]
         radio_text_button = ctk.CTkButton(toolbar_radio, text=lang['radio_text'], height=24,
                                           corner_radius=10, command=lambda: self.radio_select(0),
-                                          fg_color=colors['deselected'][mode], hover=False,
-                                          text_color=named_to_hex(colors['text'][mode], root),
-                                          font=self.custom_font)
+                                          fg_color=deselected, hover=False,
+                                          text_color=text_color, font=self.custom_font)
         radio_analysis_button = ctk.CTkButton(toolbar_radio, text=lang['radio_analysis'], height=24,
                                               corner_radius=10, command=lambda: self.radio_select(1),
-                                              fg_color=colors['deselected'][mode], hover=False,
-                                              text_color=named_to_hex(colors['text'][mode], root),
-                                              font=self.custom_font)
+                                              fg_color=deselected, hover=False,
+                                              text_color=text_color, font=self.custom_font)
         radio_cipher_button = ctk.CTkButton(toolbar_radio, text=lang['radio_cipher'], height=24,
                                             corner_radius=10, command=lambda: self.radio_select(2),
-                                            fg_color=colors['deselected'][mode], hover=False,
-                                            text_color=named_to_hex(colors['text'][mode], root),
-                                            font=self.custom_font)
+                                            fg_color=deselected, hover=False,
+                                            text_color=text_color, font=self.custom_font)
         radio_text_button.place(x=-10, y=0)
         radio_analysis_button.place(x=-10, y=24)
         radio_cipher_button.place(x=-10, y=48)
         self.radio_buttons = [radio_text_button, radio_analysis_button, radio_cipher_button]
         
         ctk.CTkButton(toolbar_menu, text='', width=30, height=30, image=self.toolbar_copy_image,
-                      fg_color=colors['deselected'][mode], hover_color=colors['button'][mode],
+                      fg_color=deselected, hover_color=theme['CTkButton']['fg_color'][mode],
                       corner_radius=15, command=self.copy_output).place(x=50, y=4)
         ctk.CTkButton(toolbar_menu, text='', width=30, height=30, image=self.toolbar_clear_image,
-                      fg_color=colors['deselected'][mode], hover_color=colors['button'][mode],
+                      fg_color=deselected, hover_color=theme['CTkButton']['fg_color'][mode],
                       corner_radius=15, command=self.clear_stages).place(x=84, y=4)
         ctk.CTkButton(toolbar_menu, text='', width=44, height=44, image=self.toolbar_theme_image,
-                      fg_color=colors['deselected'][mode], hover_color=colors['button'][mode],
+                      fg_color=deselected, hover_color=theme['CTkButton']['fg_color'][mode],
                       corner_radius=22, command=self.swap_theme).place(x=122, y=14)
         ctk.CTkButton(toolbar_menu, text='', width=44, height=44, image=self.toolbar_options_image,
-                      fg_color=colors['deselected'][mode], hover_color=colors['button'][mode],
+                      fg_color=deselected, hover_color=theme['CTkButton']['fg_color'][mode],
                       corner_radius=22).place(x=174, y=14)
 
         font_increase = ctk.CTkButton(toolbar_menu, text='', width=30, height=30,
                                       image=self.toolbar_increase_image, corner_radius=15,
-                                      fg_color=colors['deselected'][mode],
-                                      hover_color=colors['button'][mode])
+                                      fg_color=deselected,
+                                      hover_color=theme['CTkButton']['fg_color'][mode])
         font_decrease = ctk.CTkButton(toolbar_menu, text='', width=30, height=30,
                                       image=self.toolbar_decrease_image, corner_radius=15,
-                                      fg_color=colors['deselected'][mode],
-                                      hover_color=colors['button'][mode])
+                                      fg_color=deselected,
+                                      hover_color=theme['CTkButton']['fg_color'][mode])
         font_increase.place(x=50, y=38)
         font_decrease.place(x=84, y=38)
         
@@ -272,27 +274,27 @@ class App():
             for widget in [button._canvas, button._image_label]:
                 widget.bind('<Enter>', lambda event, widget=button: enter_button(widget))
                 widget.bind('<Leave>', lambda event, widget=button: leave_button(widget))
-                widget.bind('<ButtonPress-1>', lambda event, index=index: self.font_size_down(1 - index * 2))
+                widget.bind('<ButtonPress-1>', lambda event, index=index: self.font_size_down(-1 + index * 2))
                 widget.bind('<ButtonRelease-1>', self.font_size_up)
 
+        entry_color = theme['CTkEntry']['fg_color'][mode]
         self.stages_canvas = tk.Canvas(self.root, bg=bg_color, highlightthickness=0, width=230)
         self.stages_canvas.columnconfigure(0, weight=1)
         self.stages_canvas.grid(row=3, column=1, sticky='NESW')
         self.stages_canvas.bind('<MouseWheel>', self.stage_scroll)
-        self.stages_canvas.create_rectangle(225, 0, 225, 0, outline=colors['deselected'][mode])
-        self.stage_frame = ctk.CTkFrame(self.root, fg_color=named_to_hex(colors['entry'][mode],
-                                                                         root))
+        self.stages_canvas.create_rectangle(225, 0, 225, 0, outline=deselected)
+        self.stage_frame = ctk.CTkFrame(self.root, fg_color=entry_color)
         self.stage_frame.grid(row=2, column=0, rowspan=2, sticky='NESW')
         self.stage_frame.grid_propagate(0)
         self.loading_animation_label = ctk.CTkLabel(self.stage_frame, text='')
-        output_frame = ctk.CTkFrame(self.root, fg_color=named_to_hex(colors['entry'][mode], root))
+        output_frame = ctk.CTkFrame(self.root, fg_color=entry_color)
         output_frame.grid(row=2, column=2, rowspan=2, sticky='NESW')
         output_frame.rowconfigure(0, weight=1)
         output_frame.columnconfigure(0, weight=1)
         output_frame.grid_propagate(0)
-        self.stage_output = tk.Text(output_frame, bd=0, state='disabled', bg=colors['entry'][mode],
-                               font=self.display_font, fg=colors['text'][mode], wrap='word',
-                               insertbackground=colors['text'][mode])
+        self.stage_output = tk.Text(output_frame, bd=0, state='disabled', bg=entry_color,
+                               font=self.display_font, fg=text_color, wrap='word',
+                               insertbackground=text_color)
         self.stage_output.grid(padx=8, pady=8, sticky='NESW')
 
         ctk.CTkButton(self.root, text='', image=self.toolbar_toggle_image, width=42, height=30,
@@ -385,7 +387,7 @@ class App():
         self.root.after(self.constants.check_queue_delay, self.check_darkdetect_queue)
 
     def load_image(self, name, mode):
-        path = self.constants.theme['path'][name]
+        path = self.constants.theme['Path'][name]
         if mode:
             path = path[self.constants.mode]
         image = Image.open(path)
@@ -416,7 +418,7 @@ class App():
 
     def font_size_down(self, amount):
         font_size = self.display_font.cget('size')
-        font_size = max(min(font_size - amount, -9), -21)
+        font_size = min(max(font_size - amount, 9), 21)
         self.display_font.configure(size=font_size)
 
         self.font_size_after = self.root.after(self.constants.font_change_delay,
@@ -434,13 +436,13 @@ class App():
             self.update_window()
 
     def radio_select(self, button):
-        colors = self.constants.theme['color']
+        theme = self.constants.theme
         mode = self.constants.mode
-        bg_color = self.constants.named_to_hex(colors['bg_color'][mode], self.root)
-        button_color = self.constants.named_to_hex(colors['button'][mode], self.root)
+        button_color = theme['CTkButton']['fg_color'][mode]
+        deselected = theme['Custom']['deselected'][mode]
         
-        self.radio_buttons[self.radio_selected].configure(fg_color=colors['deselected'][mode],
-                                                          hover_color=colors['deselected'][mode])
+        self.radio_buttons[self.radio_selected].configure(fg_color=deselected,
+                                                          hover_color=deselected)
         self.radio_buttons[button].configure(fg_color=button_color)
         self.radio_selected = button
         
@@ -457,7 +459,7 @@ class App():
             name = self.constants.lang['stage_' + stage.lower()]['name']
             image = self.toolbar_canvas.create_image(x, y, image=self.toolbar_stage_image)
             text = self.toolbar_canvas.create_text(x, y - 4, font=self.stage_font, text=name,
-                                                   fill=colors['text'][mode])
+                                                   fill=theme['CTkLabel']['text_color'][mode])
             
             enter = lambda event: self.toolbar_canvas.configure(cursor='hand2')
             exit_ = lambda event: self.toolbar_canvas.configure(cursor='')
@@ -613,10 +615,12 @@ class App():
                 self.dragging = True
 
     def add_stage(self, stage_type, name, stage=None, update=True):
-        colors = self.constants.theme['color']
+        theme = self.constants.theme
         length = len(self.stage_positions.keys())
         display_name = self.constants.lang['stage_' + name.lower()]['name']
-        bg_color = self.constants.named_to_hex(colors['bg_color'][self.constants.mode], self.root)
+        bg_color = self.constants.named_to_hex(theme['CTk']['fg_color'][self.constants.mode],
+                                               self.root)
+        text_color = theme['CTkLabel']['text_color'][self.constants.mode]
 
         y = 40 * length + 36 // 2
         self.stages_last = max(self.stages_last, y + 36 // 2)
@@ -625,7 +629,7 @@ class App():
                                                 image=self.stage_up_image)
         text = self.stages_canvas.create_text(self.stages_canvas.winfo_width() // 2, y - 4,
                                               text=display_name, font=self.stage_font,
-                                              fill=colors['text'][self.constants.mode])
+                                              fill=text_color)
         
         for i, v in enumerate(self.current_stages):
             if not v:
@@ -656,7 +660,6 @@ class App():
             else:
                 stage = self.defined_stages[stage_type][name](self.update_output)
                 stage.setup(self.stage_frame, self.constants, self.custom_font)
-
             remove = ctk.CTkButton(self.stages_canvas, text='', image=self.stage_remove_image,
                                    command=lambda: self.remove_stage(stage_index),
                                    width=21, height=21, fg_color=bg_color, 

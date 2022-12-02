@@ -2,10 +2,10 @@ import tkinter
 import sys
 from typing import Union, Tuple, Callable, List, Optional
 
-from ..theme.theme_manager import ThemeManager
-from ..font.ctk_font import CTkFont
-from ..appearance_mode.appearance_mode_base_class import CTkAppearanceModeBaseClass
-from ..scaling.scaling_base_class import CTkScalingBaseClass
+from ..theme import ThemeManager
+from ..font import CTkFont
+from ..appearance_mode import CTkAppearanceModeBaseClass
+from ..scaling import CTkScalingBaseClass
 
 
 class DropdownMenu(tkinter.Menu, CTkAppearanceModeBaseClass, CTkScalingBaseClass):
@@ -27,9 +27,9 @@ class DropdownMenu(tkinter.Menu, CTkAppearanceModeBaseClass, CTkScalingBaseClass
         CTkScalingBaseClass.__init__(self, scaling_type="widget")
 
         self._min_character_width = min_character_width
-        self._fg_color = ThemeManager.theme["color"]["dropdown_color"] if fg_color is None else self._check_color_type(fg_color)
-        self._hover_color = ThemeManager.theme["color"]["dropdown_hover"] if hover_color is None else self._check_color_type(hover_color)
-        self._text_color = ThemeManager.theme["color"]["text"] if text_color is None else self._check_color_type(text_color)
+        self._fg_color = ThemeManager.theme["DropdownMenu"]["fg_color"] if fg_color is None else self._check_color_type(fg_color)
+        self._hover_color = ThemeManager.theme["DropdownMenu"]["hover_color"] if hover_color is None else self._check_color_type(hover_color)
+        self._text_color = ThemeManager.theme["DropdownMenu"]["text_color"] if text_color is None else self._check_color_type(text_color)
 
         # font
         self._font = CTkFont() if font is None else self._check_font_type(font)

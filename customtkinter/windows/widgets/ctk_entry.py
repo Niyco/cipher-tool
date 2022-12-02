@@ -1,13 +1,12 @@
 import tkinter
 from typing import Union, Tuple, Optional
 
-from .core_rendering.ctk_canvas import CTkCanvas
-from .theme.theme_manager import ThemeManager
-from .core_rendering.draw_engine import DrawEngine
-from .core_widget_classes.widget_base_class import CTkBaseClass
-from .font.ctk_font import CTkFont
-
-from customtkinter.utility.utility_functions import pop_from_dict_by_set, check_kwargs_empty
+from .core_rendering import CTkCanvas
+from .theme import ThemeManager
+from .core_rendering import DrawEngine
+from .core_widget_classes import CTkBaseClass
+from .font import CTkFont
+from .utility import pop_from_dict_by_set, check_kwargs_empty
 
 
 class CTkEntry(CTkBaseClass):
@@ -50,14 +49,14 @@ class CTkEntry(CTkBaseClass):
         self.grid_columnconfigure(0, weight=1)
 
         # color
-        self._fg_color = ThemeManager.theme["color"]["entry"] if fg_color is None else self._check_color_type(fg_color, transparency=True)
-        self._text_color = ThemeManager.theme["color"]["text"] if text_color is None else self._check_color_type(text_color)
-        self._placeholder_text_color = ThemeManager.theme["color"]["entry_placeholder_text"] if placeholder_text_color is None else self._check_color_type(placeholder_text_color)
-        self._border_color = ThemeManager.theme["color"]["entry_border"] if border_color is None else self._check_color_type(border_color)
+        self._fg_color = ThemeManager.theme["CTkEntry"]["fg_color"] if fg_color is None else self._check_color_type(fg_color, transparency=True)
+        self._text_color = ThemeManager.theme["CTkEntry"]["text_color"] if text_color is None else self._check_color_type(text_color)
+        self._placeholder_text_color = ThemeManager.theme["CTkEntry"]["placeholder_text_color"] if placeholder_text_color is None else self._check_color_type(placeholder_text_color)
+        self._border_color = ThemeManager.theme["CTkEntry"]["border_color"] if border_color is None else self._check_color_type(border_color)
 
         # shape
-        self._corner_radius = ThemeManager.theme["shape"]["button_corner_radius"] if corner_radius is None else corner_radius
-        self._border_width = ThemeManager.theme["shape"]["entry_border_width"] if border_width is None else border_width
+        self._corner_radius = ThemeManager.theme["CTkEntry"]["corner_radius"] if corner_radius is None else corner_radius
+        self._border_width = ThemeManager.theme["CTkEntry"]["border_width"] if border_width is None else border_width
 
         # text and state
         self._is_focused: bool = True

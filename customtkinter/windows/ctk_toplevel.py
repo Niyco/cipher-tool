@@ -6,11 +6,11 @@ import platform
 import ctypes
 from typing import Union, Tuple, Optional
 
-from .widgets.theme.theme_manager import ThemeManager
-from .widgets.scaling.scaling_base_class import CTkScalingBaseClass
-from .widgets.appearance_mode.appearance_mode_base_class import CTkAppearanceModeBaseClass
+from .widgets.theme import ThemeManager
+from .widgets.scaling import CTkScalingBaseClass
+from .widgets.appearance_mode import CTkAppearanceModeBaseClass
 
-from ..utility.utility_functions import pop_from_dict_by_set, check_kwargs_empty
+from customtkinter.windows.widgets.utility.utility_functions import pop_from_dict_by_set, check_kwargs_empty
 
 
 class CTkToplevel(tkinter.Toplevel, CTkAppearanceModeBaseClass, CTkScalingBaseClass):
@@ -46,7 +46,7 @@ class CTkToplevel(tkinter.Toplevel, CTkAppearanceModeBaseClass, CTkScalingBaseCl
         self._max_height: int = 1_000_000
         self._last_resizable_args: Union[Tuple[list, dict], None] = None  # (args, kwargs)
 
-        self._fg_color = ThemeManager.theme["color"]["window"] if fg_color is None else self._check_color_type(fg_color)
+        self._fg_color = ThemeManager.theme["CTkToplevel"]["fg_color"] if fg_color is None else self._check_color_type(fg_color)
 
         # set bg color of tkinter.Toplevel
         super().configure(bg=self._apply_appearance_mode(self._fg_color))

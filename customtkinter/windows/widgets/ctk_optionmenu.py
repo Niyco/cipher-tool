@@ -2,12 +2,12 @@ import tkinter
 import sys
 from typing import Union, Tuple, Callable, Optional
 
-from .core_rendering.ctk_canvas import CTkCanvas
-from .theme.theme_manager import ThemeManager
-from .core_rendering.draw_engine import DrawEngine
-from .core_widget_classes.widget_base_class import CTkBaseClass
-from .core_widget_classes.dropdown_menu import DropdownMenu
-from .font.ctk_font import CTkFont
+from .core_rendering import CTkCanvas
+from .theme import ThemeManager
+from .core_rendering import DrawEngine
+from .core_widget_classes import CTkBaseClass
+from .core_widget_classes import DropdownMenu
+from .font import CTkFont
 
 
 class CTkOptionMenu(CTkBaseClass):
@@ -47,16 +47,16 @@ class CTkOptionMenu(CTkBaseClass):
         super().__init__(master=master, bg_color=bg_color, width=width, height=height, **kwargs)
 
         # color variables
-        self._fg_color = ThemeManager.theme["color"]["button"] if fg_color is None else self._check_color_type(fg_color)
-        self._button_color = ThemeManager.theme["color"]["optionmenu_button"] if button_color is None else self._check_color_type(button_color)
-        self._button_hover_color = ThemeManager.theme["color"]["optionmenu_button_hover"] if button_hover_color is None else self._check_color_type(button_hover_color)
+        self._fg_color = ThemeManager.theme["CTkOptionMenu"]["fg_color"] if fg_color is None else self._check_color_type(fg_color)
+        self._button_color = ThemeManager.theme["CTkOptionMenu"]["button_color"] if button_color is None else self._check_color_type(button_color)
+        self._button_hover_color = ThemeManager.theme["CTkOptionMenu"]["button_hover_color"] if button_hover_color is None else self._check_color_type(button_hover_color)
 
         # shape
-        self._corner_radius = ThemeManager.theme["shape"]["button_corner_radius"] if corner_radius is None else corner_radius
+        self._corner_radius = ThemeManager.theme["CTkOptionMenu"]["corner_radius"] if corner_radius is None else corner_radius
 
         # text and font
-        self._text_color = ThemeManager.theme["color"]["text_button"] if text_color is None else self._check_color_type(text_color)
-        self._text_color_disabled = ThemeManager.theme["color"]["text_button_disabled"] if text_color_disabled is None else self._check_color_type(text_color_disabled)
+        self._text_color = ThemeManager.theme["CTkOptionMenu"]["text_color"] if text_color is None else self._check_color_type(text_color)
+        self._text_color_disabled = ThemeManager.theme["CTkOptionMenu"]["text_color_disabled"] if text_color_disabled is None else self._check_color_type(text_color_disabled)
 
         # font
         self._font = CTkFont() if font is None else self._check_font_type(font)

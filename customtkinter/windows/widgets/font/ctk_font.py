@@ -1,8 +1,8 @@
 from tkinter.font import Font
 import copy
-from typing import List, Callable, Tuple
+from typing import List, Callable, Tuple, Optional, Literal
 
-from ..theme.theme_manager import ThemeManager
+from ..theme import ThemeManager
 
 
 class CTkFont(Font):
@@ -21,25 +21,26 @@ class CTkFont(Font):
     """
 
     def __init__(self,
-                 family: str = "default",
-                 size: int = "default",
-                 weight: str = "normal",
-                 slant: str = "roman",
+                 family: Optional[str] = None,
+                 size: Optional[int] = None,
+                 weight: Literal["normal", "bold"] = None,
+                 slant: Literal["italic", "roman"] = "roman",
                  underline: bool = False,
                  overstrike: bool = False):
 
         self._size_configure_callback_list: List[Callable] = []
 
-        self._family = family
-        self._size = ThemeManager.theme["text"]["size"] if size == "default" else size
-        self._tuple_style_string = f"{weight} {slant} {'underline' if underline else ''} {'overstrike' if overstrike else ''}"
+        self._size = ThemeManager.theme["CTkFont"]["size"] if size is None else size
 
-        super().__init__(family=ThemeManager.theme["text"]["font"] if family == "default" else family,
+        super().__init__(family=ThemeManager.theme["CTkFont"]["family"] if family is None else family,
                          size=-abs(self._size),
-                         weight=weight,
+                         weight=ThemeManager.theme["CTkFont"]["weight"] if weight is None else weight,
                          slant=slant,
                          underline=underline,
                          overstrike=overstrike)
+
+        self._family = super().cget("family")
+        self._tuple_style_string = f"{super().cget('weight')} {slant} {'underline' if underline else ''} {'overstrike' if overstrike else ''}"
 
     def add_size_configure_callback(self, callback: Callable):
         """ add function, that gets called when font got configured """
@@ -50,8 +51,9 @@ class CTkFont(Font):
         self._size_configure_callback_list.remove(callback)
 
     def create_scaled_tuple(self, font_scaling: float) -> Tuple[str, int, str]:
+
         """ return scaled tuple representation of font in the form (family: str, size: int, style: str)"""
-        return self._family, round(self._size * font_scaling), self._tuple_style_string
+        return self._family, round(-abs(self._size) * font_scaling), self._tuple_style_string
 
     def config(self, *args, **kwargs):
         raise AttributeError("'config' is not implemented for CTk widgets. For consistency, always use 'configure' instead.")
@@ -60,6 +62,10 @@ class CTkFont(Font):
         if "size" in kwargs:
             self._size = kwargs.pop("size")
             super().configure(size=-abs(self._size))
+
+        if "family" in kwargs:
+            super().configure(family=kwargs.pop("family"))
+            self._family = super().cget("family")
 
         super().configure(**kwargs)
 
@@ -73,6 +79,8 @@ class CTkFont(Font):
     def cget(self, attribute_name: str) -> any:
         if attribute_name == "size":
             return self._size
+        if attribute_name == "family":
+            return self._family
         else:
             return super().cget(attribute_name)
 

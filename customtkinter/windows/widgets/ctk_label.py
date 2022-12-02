@@ -1,14 +1,13 @@
 import tkinter
 from typing import Union, Tuple, Callable, Optional
 
-from .core_rendering.ctk_canvas import CTkCanvas
-from .theme.theme_manager import ThemeManager
-from .core_rendering.draw_engine import DrawEngine
-from .core_widget_classes.widget_base_class import CTkBaseClass
-from .font.ctk_font import CTkFont
-from .image.ctk_image import CTkImage
-
-from customtkinter.utility.utility_functions import pop_from_dict_by_set, check_kwargs_empty
+from .core_rendering import CTkCanvas
+from .theme import ThemeManager
+from .core_rendering import DrawEngine
+from .core_widget_classes import CTkBaseClass
+from .font import CTkFont
+from .image import CTkImage
+from .utility import pop_from_dict_by_set, check_kwargs_empty
 
 
 class CTkLabel(CTkBaseClass):
@@ -43,11 +42,11 @@ class CTkLabel(CTkBaseClass):
         super().__init__(master=master, bg_color=bg_color, width=width, height=height)
 
         # color
-        self._fg_color = ThemeManager.theme["color"]["label"] if fg_color is None else self._check_color_type(fg_color, transparency=True)
-        self._text_color = ThemeManager.theme["color"]["text"] if text_color is None else self._check_color_type(text_color)
+        self._fg_color = ThemeManager.theme["CTkLabel"]["fg_color"] if fg_color is None else self._check_color_type(fg_color, transparency=True)
+        self._text_color = ThemeManager.theme["CTkLabel"]["text_color"] if text_color is None else self._check_color_type(text_color)
 
         # shape
-        self._corner_radius = ThemeManager.theme["shape"]["label_corner_radius"] if corner_radius is None else corner_radius
+        self._corner_radius = ThemeManager.theme["CTkLabel"]["corner_radius"] if corner_radius is None else corner_radius
 
         # text
         self._anchor = anchor
@@ -102,7 +101,12 @@ class CTkLabel(CTkBaseClass):
         self._label.configure(wraplength=self._apply_widget_scaling(self._wraplength))
 
         self._create_grid()
+        self._update_image()
         self._draw(no_color_updates=True)
+
+    def _set_appearance_mode(self, mode_string):
+        super()._set_appearance_mode(mode_string)
+        self._update_image()
 
     def _set_dimensions(self, width=None, height=None):
         super()._set_dimensions(width, height)
@@ -165,9 +169,6 @@ class CTkLabel(CTkBaseClass):
                                       bg=self._apply_appearance_mode(self._fg_color))
 
             self._canvas.configure(bg=self._apply_appearance_mode(self._bg_color))
-
-        if self._image is not None:
-            self._update_image()
 
     def configure(self, require_redraw=False, **kwargs):
         if "corner_radius" in kwargs:

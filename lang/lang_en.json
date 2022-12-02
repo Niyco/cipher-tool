@@ -94,6 +94,7 @@
 		"keyword_contents": "Keyword:",
 		"radio_vigenere": "Vigenere",
 		"radio_beaufort": "Beaufort",
+		"frequencies": "Decrypted Frequencies:",
 		"encode": "Encrypt"
 	}
 }

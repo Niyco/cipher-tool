@@ -1,12 +1,12 @@
 import tkinter
 from typing import Union, Tuple, Dict, List, Callable, Optional
 
-from .theme.theme_manager import ThemeManager
+from .theme import ThemeManager
 from .ctk_frame import CTkFrame
-from .core_widget_classes.widget_base_class import CTkBaseClass
+from .core_rendering import CTkCanvas
+from .core_rendering import DrawEngine
+from .core_widget_classes import CTkBaseClass
 from .ctk_segmented_button import CTkSegmentedButton
-from .core_rendering.ctk_canvas import CTkCanvas
-from .core_rendering.draw_engine import DrawEngine
 
 
 class CTkTabview(CTkBaseClass):
@@ -48,23 +48,23 @@ class CTkTabview(CTkBaseClass):
         super().__init__(master=master, bg_color=bg_color, width=width, height=height, **kwargs)
 
         # color
-        self._border_color = ThemeManager.theme["color"]["frame_border"] if border_color is None else self._check_color_type(border_color)
+        self._border_color = ThemeManager.theme["CTkFrame"]["border_color"] if border_color is None else self._check_color_type(border_color)
 
         # determine fg_color of frame
         if fg_color is None:
             if isinstance(self.master, (CTkFrame, CTkTabview)):
-                if self.master.cget("fg_color") == ThemeManager.theme["color"]["frame_low"]:
-                    self._fg_color = ThemeManager.theme["color"]["frame_high"]
+                if self.master.cget("fg_color") == ThemeManager.theme["CTkFrame"]["fg_color"]:
+                    self._fg_color = ThemeManager.theme["CTkFrame"]["top_fg_color"]
                 else:
-                    self._fg_color = ThemeManager.theme["color"]["frame_low"]
+                    self._fg_color = ThemeManager.theme["CTkFrame"]["fg_color"]
             else:
-                self._fg_color = ThemeManager.theme["color"]["frame_low"]
+                self._fg_color = ThemeManager.theme["CTkFrame"]["fg_color"]
         else:
             self._fg_color = self._check_color_type(fg_color, transparency=True)
 
         # shape
-        self._corner_radius = ThemeManager.theme["shape"]["frame_corner_radius"] if corner_radius is None else corner_radius
-        self._border_width = ThemeManager.theme["shape"]["frame_border_width"] if border_width is None else border_width
+        self._corner_radius = ThemeManager.theme["CTkFrame"]["corner_radius"] if corner_radius is None else corner_radius
+        self._border_width = ThemeManager.theme["CTkFrame"]["border_width"] if border_width is None else border_width
 
         self._canvas = CTkCanvas(master=self,
                                  bg=self._apply_appearance_mode(self._bg_color),
@@ -296,7 +296,7 @@ class CTkTabview(CTkBaseClass):
             if len(self._tab_dict) == 0:
                 self._set_grid_segmented_button()
 
-            #self._name_list.insert(index, name)
+            self._name_list.insert(index, name)
             self._tab_dict[name] = self._create_tab()
             self._segmented_button.insert(index, name)
             self._configure_tab_background_corners_by_name(name)
@@ -329,7 +329,7 @@ class CTkTabview(CTkBaseClass):
         """ delete tab by name """
 
         if name in self._tab_dict:
-            #self._name_list.remove(name)
+            self._name_list.remove(name)
             self._tab_dict[name].grid_forget()
             self._tab_dict.pop(name)
             self._segmented_button.delete(name)
