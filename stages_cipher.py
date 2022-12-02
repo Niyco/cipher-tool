@@ -334,6 +334,7 @@ class Substitution(Stage):
         
     def setup(self, frame, constants, font):
         super().setup(self, frame, constants, font)
+        bg_color = self.constants.theme['CTkEntry']['fg_color'][self.constants.mode]
         self.encode_switch = ctk.CTkSwitch(frame, text=self.texts['encode'], onvalue=1, offvalue=0,
                                            variable=self.encode_var, font=self.font)
         self.input_1 = ctk.CTkEntry(frame, width=60, font=self.font)
@@ -343,7 +344,7 @@ class Substitution(Stage):
                                       command=self.substitute)
         self.button_2 = ctk.CTkButton(frame, text=self.texts['button_2'], width=110, font=self.font,
                                       command=self.unsubstitute)
-        self.textbox = DisplayText(frame, width=110, height=435, font=self.font)
+        self.textbox = DisplayText(frame, width=110, height=435, font=self.font, fg_color=bg_color)
         self.keyword = ctk.CTkButton(frame, text=self.texts['keyword'], command=self.get_keyword,
                                      font=self.font)
 
@@ -542,9 +543,10 @@ class Substitution(Stage):
         self.keyword.grid(row=1, column=1, columnspan=3)
         self.textbox.grid(row=0, column=5, rowspan=2, columnspan=2)
         self.encode_switch.grid(row=1, column=6, padx=15, pady=15, sticky='SE')
-
-        self.button_1.configure(fg_color=self.constants.theme['color']['button'][self.constants.mode])
-        self.button_2.configure(fg_color=self.constants.theme['color']['button'][self.constants.mode])
+        
+        button_color = self.constants.theme['CTkButton']['fg_color'][self.constants.mode]
+        self.button_1.configure(fg_color=button_color)
+        self.button_2.configure(fg_color=button_color)
 
 class Affine(Stage):
     def __init__(self, update_output):
@@ -625,9 +627,11 @@ class Vigenere(Stage):
         self.encode = tk.IntVar(value=0)
         self.mode = tk.IntVar(value=0)
         self.keyword_length = tk.StringVar(value='5')
+        self.raw_kw = tk.StringVar()
         self.encode.trace('w', self.update_mode)
         self.mode.trace('w', self.update_mode)
         self.keyword_length.trace('w', self.update_key_length)
+        self.raw_kw.trace('w', self.raw_kw_update)
         self.update_vars.extend([0, 0, 5, 'AAAAA'])
 
     def setup(self, frame, constants, font):
@@ -638,6 +642,8 @@ class Vigenere(Stage):
                                          justify='center', takefocus=0, font=self.font)
         self.kw_input = InsertEntry(frame, width=55, font=self.font, cb=self.update_keyword,
                                     alphabet=self.constants.alphabet)
+        self.raw_kw_input = ctk.CTkEntry(frame, textvariable=self.raw_kw, justify='center',
+                                         font=self.font)
         self.radio_vigenere = ctk.CTkRadioButton(frame, variable=self.mode, value=0,
                                                  text=self.texts['radio_vigenere'], font=self.font)
         self.radio_beaufort = ctk.CTkRadioButton(frame, variable=self.mode, value=1,
@@ -659,6 +665,14 @@ class Vigenere(Stage):
                                       command=self.tab_select)
         for i in range(self.update_vars[2]):
             self.add_tab()
+
+    def raw_kw_update(self, *args):
+        value = self.raw_kw.get()
+        length = len(value)
+        if False not in [c.lower() in self.constants.alphabet for c in value] and length > 0:
+            self.update_vars[3] = value
+            self.update_vars[2] = length
+            self.update_output(self)
 
     def cycle_left(self, event):
         index = int(self.tabview.get())
@@ -697,6 +711,13 @@ class Vigenere(Stage):
     def update_mode(self, var, index, mode):
         if var == str(self.encode):
             self.update_vars[0] = self.encode.get()
+            for widget in self.frame.winfo_children():
+                widget.grid_forget()
+            for i in range(0, 10):
+                self.frame.rowconfigure(i, weight=0, minsize=0)
+                self.frame.columnconfigure(i, weight=0, minsize=0)
+            self.display()
+
         else:
             self.update_vars[1] = self.mode.get()
                                                         
@@ -869,15 +890,23 @@ class Vigenere(Stage):
         return (result, (frequencies,))
 
     def display(self):
-        self.frame.rowconfigure(4, minsize=100)
-        self.frame.rowconfigure(7, weight=1)
-        self.frame.columnconfigure(1, weight=1)
-        self.kw_len_label.grid(column=0, row=0)
-        self.kw_len_input.grid(column=0, row=1, pady=15)
-        self.kw_label.grid(column=0, row=2, pady=15)
-        self.kw_input.grid(column=0, row=3)
-        self.radio_vigenere.grid(column=0, row=5, padx=25, pady=6, sticky='W')
-        self.radio_beaufort.grid(column=0, row=6, padx=25, pady=6, sticky='W')
-        self.tabview.grid(column=1, row=0, rowspan=8, padx=15, pady=5, sticky='NESW')
-        self.encode_switch.grid(column=1, row=8, padx=15, pady=15, sticky='SE')
-        self.kw_label.focus()
+        if self.encode.get():
+            self.frame.rowconfigure(0, weight=1)
+            self.frame.rowconfigure(1, weight=1)
+            self.frame.columnconfigure(0, weight=1)
+            self.kw_label.grid(column=0, row=0, sticky='S')
+            self.raw_kw_input.grid(column=0, row=1, sticky='N')
+            self.encode_switch.grid(column=0, row=2, padx=15, pady=15, sticky='SE')
+        else:
+            self.frame.rowconfigure(4, minsize=100)
+            self.frame.rowconfigure(7, weight=1)
+            self.frame.columnconfigure(1, weight=1)
+            self.kw_len_label.grid(column=0, row=0)
+            self.kw_len_input.grid(column=0, row=1, pady=15)
+            self.kw_label.grid(column=0, row=2, pady=15)
+            self.kw_input.grid(column=0, row=3)
+            self.radio_vigenere.grid(column=0, row=5, padx=25, pady=6, sticky='W')
+            self.radio_beaufort.grid(column=0, row=6, padx=25, pady=6, sticky='W')
+            self.tabview.grid(column=1, row=0, rowspan=8, padx=15, pady=5, sticky='NESW')
+            self.encode_switch.grid(column=1, row=8, padx=15, pady=15, sticky='SE')
+            self.kw_label.focus()

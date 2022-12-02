@@ -42,6 +42,8 @@ class Frequency(Stage):
     
     def setup(self, frame, constants, font):
         super().setup(self, frame, constants, font)
+        bg_color = self.constants.theme['CTkEntry']['fg_color'][self.constants.mode]
+
         self.radio_1 = ctk.CTkRadioButton(frame, variable=self.mode_var, value=0, font=self.font,
                                           text=self.texts['radio_1'])
         self.radio_2 = ctk.CTkRadioButton(frame, variable=self.mode_var, value=1, font=self.font,
@@ -50,7 +52,7 @@ class Frequency(Stage):
                                           text=self.texts['radio_3'])
         self.checkbox = ctk.CTkCheckBox(frame, variable=self.alpha_ex_var, font=self.font,
                                         text=self.texts['checkbox'])
-        self.textbox = DisplayText(frame, font=self.font, width=120)
+        self.textbox = DisplayText(frame, font=self.font, width=120, fg_color=bg_color)
 
     def input_update(self, var, index, mode):
         if var == str(self.mode_var):
@@ -84,7 +86,7 @@ class Frequency(Stage):
         formatted = ''
         for k in frequencies:
             v = frequencies[k]
-            formatted += f'\'{k}\': {round(v * 100, 2)}%\n'
+            formatted += f'\'{k}\': {v*100:.2f}%\n'
 
         self.textbox.configure(state='normal')
         self.textbox.delete(1.0, 'end')
@@ -155,6 +157,8 @@ class SubstitutionFinder(Stage):
         
     def setup(self, frame, constants, font):
         super().setup(self, frame, constants, font)
+        bg_color = self.constants.theme['CTkEntry']['fg_color'][self.constants.mode]
+
         self.results_label = ctk.CTkLabel(frame, text=(self.texts['results_label'] + ' '
                                                        + str(self.results_var.get())),
                                           font=self.font)
@@ -167,7 +171,7 @@ class SubstitutionFinder(Stage):
                                               from_=10000, to=100000, slider_cb=self.slider_update)
         self.update_button = ctk.CTkButton(frame, text=self.texts['update_button'],
                                            command=self.update_button, font=self.font)
-        self.textbox = DisplayText(frame, font=self.font, width=110,
+        self.textbox = DisplayText(frame, font=self.font, width=110, fg_color=bg_color,
                                    height=(self.results_var.get() + 1) * 16)
         self.textbox.bind('<Control-c>', self.copy)
 
