@@ -704,6 +704,8 @@ class Vigenere(Stage):
             if self.keyword_length.get() == '1':
                 self.kw_input.delete(0, 1)
                 self.kw_input.insert(0, 'A')
+                if len(self.tabs) != 1:
+                    self.update_key_length()
                 self.update_keyword('A')
             else:
                 self.keyword_length.set(str(max(int(self.keyword_length.get()) - 1, 1)))
@@ -737,18 +739,20 @@ class Vigenere(Stage):
                     self.update_vars[2] = length
                     self.kw_input.configure(width=13 + 8 * length)
                     self.kw_input.insert('end', 'A' * difference)
-                    self.update_vars[3] = self.update_vars[3] + 'A'
+                    self.update_vars[3] = self.update_vars[3] + 'A' * difference
+                    self.update_output(self)
 
                 elif length < previous:
                     for i in range(difference):
-                        index = len(self.tabs) + i - 1
+                        index = len(self.tabs) - 1
                         self.tabview.delete(str(index))
                         self.tabs.pop(index)
                     self.update_vars[2] = length
                     self.kw_input.configure(width=13 + 8 * length)
-                    self.kw_input.delete(length - difference + 1, 'end')
-                    self.update_vars[3] = self.update_vars[3][:-1]
-                
+                    self.kw_input.delete(length, 'end')
+                    self.update_vars[3] = self.update_vars[3][:0 - difference]
+                    self.update_output(self)
+
     def update_keyword(self, keyword, update=True):
         tabs_keyword = ''.join([e[0] for e in self.tabs])
         if keyword != tabs_keyword:
@@ -756,7 +760,8 @@ class Vigenere(Stage):
 
             self.tabview._segmented_button._buttons_dict[index].configure(text=char) 
             self.tabs[int(index)][0] = char
-            self.tabs[int(index)][3].set(self.constants.alphabet.index(char.lower()))
+            self.tabs[int(index)][3].set(self.constants.alphabet.index(char.lower()),
+                                         from_variable_callback=True)
             self.update_vars[3] = keyword
             self.tabview.set(index)
             self.update_graph(None)
@@ -854,9 +859,10 @@ class Vigenere(Stage):
             self.update_graph(None)
 
     def update_widgets(self, frequencies):
-        self.frequencies = frequencies
-        self.updated = int(self.tabview.get())
-        self.update_graph(None)
+        if not self.encode.get():
+            self.frequencies = frequencies
+            self.updated = int(self.tabview.get())
+            self.update_graph(None)
 
     @staticmethod
     def update(text, constants, encode, mode, keyword_length, keyword_contents):
@@ -910,3 +916,136 @@ class Vigenere(Stage):
             self.tabview.grid(column=1, row=0, rowspan=8, padx=15, pady=5, sticky='NESW')
             self.encode_switch.grid(column=1, row=8, padx=15, pady=15, sticky='SE')
             self.kw_label.focus()
+
+class RailFence(Stage):
+    def __init__(self, update_output):
+        super().__init__(update_output)
+        self.encode =  tk.IntVar(value=0)
+        self.key = tk.StringVar(value='2')
+        self.mode = tk.IntVar(value=0)
+        self.mode.trace('w', self.mode_update)
+        self.key.trace('w', self.input_update)
+        self.encode.trace('w', self.encode_update)
+        self.update_vars = [0, 2, self.vertical_counter, self.row_lengths]
+
+    def setup(self, frame, constants, font):
+        super().setup(self, frame, constants, font)
+        self.key_label = ctk.CTkLabel(frame, font=font, text=self.texts['key'])
+        self.key_input = ctk.CTkEntry(frame, font=font, justify='center', width=30,
+                                      textvariable=self.key)
+        self.vertical_radio = ctk.CTkRadioButton(frame, text=self.texts['vertical'], value=0,
+                                                 variable=self.mode)
+        self.horizontal_radio = ctk.CTkRadioButton(frame, text=self.texts['horizontal'], value=1,
+                                                 variable=self.mode)
+        self.encode_switch = ctk.CTkSwitch(frame, variable=self.encode, text=self.texts['encode'],
+                                           font=self.font)
+        self.key_input.bind('<MouseWheel>', self.scroll_input)
+
+    def scroll_input(self, event):
+        self.key.set(str(max(min(self.update_vars[1] + event.delta // 120, 30), 2)))
+
+    def input_update(self, *args):
+        value = self.key.get()
+        if value.isnumeric():
+            value = int(value)
+            if 1 < value and value < 30:
+                self.update_vars[1] = value
+                self.update_output(self)
+
+    def encode_update(self, *args):
+        self.update_vars[0] = self.encode.get()
+        self.update_output(self)
+
+    def mode_update(self, *args):
+        if self.mode.get():
+            self.update_vars[2] = self.horizontal_counter
+        else:
+            self.update_vars[2] = self.vertical_counter
+
+        self.update_output(self)
+
+    @staticmethod
+    def row_lengths(length, rails):
+        cycle_length = rails * 2 - 2
+        rail_lengths = [0, (length - 1) // cycle_length + 1]
+        for i in range(rails - 2):
+            rail_length = length // cycle_length * 2
+            if length % cycle_length > i + 1:
+                rail_length += 1
+            if length % cycle_length > cycle_length - i - 1:
+                rail_length += 1
+            rail_lengths.append(rail_lengths[i + 1] + rail_length)
+
+        return rail_lengths
+ 
+    @staticmethod
+    def vertical_counter(rails):
+        rail_length = len(rails)
+        cycle_length = rail_length * 2 - 2
+        i = 0
+        cycle = 0
+        rail = 0
+        while True:
+            if rail == 0 or rail == rail_length - 1:
+                yield rails[rail] + i // cycle_length
+            else:
+                yield rails[rail] + i // (rail_length - 1)
+
+            i += 1
+            cycle = i % cycle_length
+            rail = cycle - 2 * (cycle // rail_length) * (cycle % rail_length + 1)
+
+    @staticmethod
+    def horizontal_counter(rails):
+        rail_length = len(rails)
+        cycle_length = rail_length * 2 - 2
+        i = 0
+        j = 0
+        rail = 0
+        while True:
+            yield j
+
+            if rail == 0 or rail == rail_length - 1:
+                print(rail)
+                j += cycle_length
+            else:
+                j += rail_length - 1
+                if i % 2 == 1:
+                    j += int(((rail_length - 1) / 2 - rail) * 2)
+            
+            i += 1
+            print(i, rails)
+            new_rail = next(x - 1 for x, y in enumerate(rails) if y > i)
+            if new_rail != rail:
+                rail = new_rail
+                j = new_rail
+                i = 0
+
+    @staticmethod
+    def update(text, constants, encode, rows, looping_counter, row_lengths):
+        length = len(text)
+        counter = looping_counter(row_lengths(length, rows))
+
+        if encode:
+            result = [''] * length
+            for i in range(length):
+                result[next(counter)] = text[i].upper()
+            result = ''.join(result)
+        else:
+            result = ''
+            for i in range(length):
+                next(counter)
+                #result += text[next(counter)].lower()
+
+        return (result, ())
+
+    def display(self):
+        self.frame.rowconfigure(0, weight=1)
+        self.frame.rowconfigure(3, minsize=12)
+        self.frame.rowconfigure(6, weight=1)
+        self.frame.columnconfigure(0, weight=1)
+        self.key_label.grid(column=0, row=1, pady=0, sticky='S')
+        self.key_input.grid(column=0, row=2, pady=12, sticky='N')
+        self.vertical_radio.grid(column=0, row=4, pady=12, sticky='S')
+        self.horizontal_radio.grid(column=0, row=5, pady=0, sticky='N')
+        self.encode_switch.grid(column=0, row=6, padx=15, pady=15, sticky='SE')

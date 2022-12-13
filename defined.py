@@ -69,7 +69,7 @@ class CustomSlider(ctk.CTkSlider):
         self._variable.set(new)
         if self.var_cb:
             self.var_cb(self._variable, self._variable.get())
-        
+
     def var_trace(self, *args):
         self.new_value = self._variable.get()
         if self.new_value != self.prev_value:

@@ -101,6 +101,7 @@ class App():
         self.create_stage(Affine, 2)
         self.create_stage(Substitution, 2)
         self.create_stage(Vigenere, 2)
+        self.create_stage(RailFence, 2)
 
     def start(self):
         self.root = ctk.CTk()
