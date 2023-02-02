@@ -90,15 +90,19 @@ class CTkEntry(CTkBaseClass):
                                     textvariable=self._textvariable,
                                     **pop_from_dict_by_set(kwargs, self._valid_tk_entry_attributes))
 
-        self._create_grid()
-
         check_kwargs_empty(kwargs, raise_error=True)
 
-        self._entry.bind('<FocusOut>', self._entry_focus_out)
-        self._entry.bind('<FocusIn>', self._entry_focus_in)
-
+        self._create_grid()
         self._activate_placeholder()
+        self._create_bindings()
         self._draw()
+
+    def _create_bindings(self, sequence: Optional[str] = None):
+        """ set necessary bindings for functionality of widget, will overwrite other bindings """
+        if sequence is None or sequence == "<FocusIn>":
+            self._entry.bind("<FocusIn>", self._entry_focus_in)
+        if sequence is None or sequence == "<FocusOut>":
+            self._entry.bind("<FocusOut>", self._entry_focus_out)
 
     def _create_grid(self):
         self._canvas.grid(column=0, row=0, sticky="nswe")
@@ -163,6 +167,7 @@ class CTkEntry(CTkBaseClass):
                                         outline=self._apply_appearance_mode(self._bg_color))
                 self._entry.configure(bg=self._apply_appearance_mode(self._bg_color),
                                       disabledbackground=self._apply_appearance_mode(self._bg_color),
+                                      readonlybackground=self._apply_appearance_mode(self._bg_color),
                                       highlightcolor=self._apply_appearance_mode(self._bg_color))
             else:
                 self._canvas.itemconfig("inner_parts",
@@ -170,6 +175,7 @@ class CTkEntry(CTkBaseClass):
                                         outline=self._apply_appearance_mode(self._fg_color))
                 self._entry.configure(bg=self._apply_appearance_mode(self._fg_color),
                                       disabledbackground=self._apply_appearance_mode(self._fg_color),
+                                      readonlybackground=self._apply_appearance_mode(self._fg_color),
                                       highlightcolor=self._apply_appearance_mode(self._fg_color))
 
             self._canvas.itemconfig("border_parts",
@@ -275,13 +281,19 @@ class CTkEntry(CTkBaseClass):
         else:
             return super().cget(attribute_name)  # cget of CTkBaseClass
 
-    def bind(self, sequence=None, command=None, add=None):
+    def bind(self, sequence=None, command=None, add=True):
         """ called on the tkinter.Entry """
-        return self._entry.bind(sequence, command, add)
+        if not (add == "+" or add is True):
+            raise ValueError("'add' argument can only be '+' or True to preserve internal callbacks")
+        self._entry.bind(sequence, command, add=True)
 
-    def unbind(self, sequence, funcid=None):
+    def unbind(self, sequence=None, funcid=None):
         """ called on the tkinter.Entry """
-        return self._entry.unbind(sequence, funcid)
+        if funcid is not None:
+            raise ValueError("'funcid' argument can only be None, because there is a bug in" +
+                             " tkinter and its not clear whether the internal callbacks will be unbinded or not")
+        self._entry.unbind(sequence, None)  # unbind all callbacks for sequence
+        self._create_bindings(sequence=sequence)  # restore internal callbacks for sequence
 
     def _activate_placeholder(self):
         if self._entry.get() == "" and self._placeholder_text is not None and (self._textvariable is None or self._textvariable == ""):
@@ -295,7 +307,7 @@ class CTkEntry(CTkBaseClass):
             self._entry.insert(0, self._placeholder_text)
 
     def _deactivate_placeholder(self):
-        if self._placeholder_text_active:
+        if self._placeholder_text_active and self._entry.cget("state") != "readonly":
             self._placeholder_text_active = False
 
             self._entry.config(fg=self._apply_appearance_mode(self._text_color),

@@ -103,10 +103,6 @@ class CTkCheckBox(CTkBaseClass):
         self._canvas.grid(row=0, column=0, sticky="e")
         self._draw_engine = DrawEngine(self._canvas)
 
-        self._canvas.bind("<Enter>", self._on_enter)
-        self._canvas.bind("<Leave>", self._on_leave)
-        self._canvas.bind("<Button-1>", self.toggle)
-
         self._text_label = tkinter.Label(master=self,
                                          bd=0,
                                          padx=0,
@@ -118,17 +114,26 @@ class CTkCheckBox(CTkBaseClass):
         self._text_label.grid(row=0, column=2, sticky="w")
         self._text_label["anchor"] = "w"
 
-        self._text_label.bind("<Enter>", self._on_enter)
-        self._text_label.bind("<Leave>", self._on_leave)
-        self._text_label.bind("<Button-1>", self.toggle)
-
         # register variable callback and set state according to variable
         if self._variable is not None and self._variable != "":
             self._variable_callback_name = self._variable.trace_add("write", self._variable_callback)
             self._check_state = True if self._variable.get() == self._onvalue else False
 
-        self._draw()  # initial draw
+        self._create_bindings()
         self._set_cursor()
+        self._draw()
+
+    def _create_bindings(self, sequence: Optional[str] = None):
+        """ set necessary bindings for functionality of widget, will overwrite other bindings """
+        if sequence is None or sequence == "<Enter>":
+            self._canvas.bind("<Enter>", self._on_enter)
+            self._text_label.bind("<Enter>", self._on_enter)
+        if sequence is None or sequence == "<Leave>":
+            self._canvas.bind("<Leave>", self._on_leave)
+            self._text_label.bind("<Leave>", self._on_leave)
+        if sequence is None or sequence == "<Button-1>":
+            self._canvas.bind("<Button-1>", self.toggle)
+            self._text_label.bind("<Button-1>", self.toggle)
 
     def _set_scaling(self, *args, **kwargs):
         super()._set_scaling(*args, **kwargs)
@@ -430,13 +435,21 @@ class CTkCheckBox(CTkBaseClass):
     def get(self) -> Union[int, str]:
         return self._onvalue if self._check_state is True else self._offvalue
 
-    def bind(self, sequence=None, command=None, add=None):
+    def bind(self, sequence: str = None, command: Callable = None, add: Union[str, bool] = True):
         """ called on the tkinter.Canvas """
-        return self._canvas.bind(sequence, command, add)
+        if not (add == "+" or add is True):
+            raise ValueError("'add' argument can only be '+' or True to preserve internal callbacks")
+        self._canvas.bind(sequence, command, add=True)
+        self._text_label.bind(sequence, command, add=True)
 
-    def unbind(self, sequence, funcid=None):
-        """ called on the tkinter.Canvas """
-        return self._canvas.unbind(sequence, funcid)
+    def unbind(self, sequence: str = None, funcid: str = None):
+        """ called on the tkinter.Label and tkinter.Canvas """
+        if funcid is not None:
+            raise ValueError("'funcid' argument can only be None, because there is a bug in" +
+                             " tkinter and its not clear whether the internal callbacks will be unbinded or not")
+        self._canvas.unbind(sequence, None)
+        self._text_label.unbind(sequence, None)
+        self._create_bindings(sequence=sequence)  # restore internal callbacks for sequence
 
     def focus(self):
         return self._text_label.focus()

@@ -1,4 +1,5 @@
 import sys
+import warnings
 import tkinter
 import tkinter.ttk as ttk
 from typing import Union, Callable, Tuple
@@ -158,15 +159,15 @@ class CTkBaseClass(tkinter.Frame, CTkAppearanceModeBaseClass, CTkScalingBaseClas
             return font
 
         elif type(font) == tuple and len(font) == 1:
-            sys.stderr.write(f"{type(self).__name__} Warning: font {font} given without size, will be extended with default text size of current theme\n")
+            warnings.warn(f"{type(self).__name__} Warning: font {font} given without size, will be extended with default text size of current theme\n")
             return font[0], ThemeManager.theme["text"]["size"]
 
-        elif type(font) == tuple and 2 <= len(font) <= 3:
+        elif type(font) == tuple and 2 <= len(font) <= 6:
             return font
 
         else:
             raise ValueError(f"Wrong font type {type(font)}\n" +
-                             f"For consistency, Customtkinter requires the font argument to be a tuple of len 2 or 3 or an instance of CTkFont.\n" +
+                             f"For consistency, Customtkinter requires the font argument to be a tuple of len 2 to 6 or an instance of CTkFont.\n" +
                              f"\nUsage example:\n" +
                              f"font=customtkinter.CTkFont(family='<name>', size=<size in px>)\n" +
                              f"font=('<name>', <size in px>)\n")
@@ -178,8 +179,8 @@ class CTkBaseClass(tkinter.Frame, CTkAppearanceModeBaseClass, CTkScalingBaseClas
         elif isinstance(image, CTkImage):
             return image
         else:
-            sys.stderr.write(f"{type(self).__name__} Warning: Given image is not CTkImage but {type(image)}. " +
-                             f"Image can not be scaled on HighDPI displays, use CTkImage instead.\n")
+            warnings.warn(f"{type(self).__name__} Warning: Given image is not CTkImage but {type(image)}. " +
+                          f"Image can not be scaled on HighDPI displays, use CTkImage instead.\n")
             return image
 
     def _update_dimensions_event(self, event):
@@ -239,6 +240,18 @@ class CTkBaseClass(tkinter.Frame, CTkAppearanceModeBaseClass, CTkScalingBaseClas
 
         super().configure(width=self._apply_widget_scaling(self._desired_width),
                           height=self._apply_widget_scaling(self._desired_height))
+
+    def bind(self, sequence=None, command=None, add=None):
+        raise NotImplementedError
+
+    def unbind(self, sequence=None, funcid=None):
+        raise NotImplementedError
+
+    def unbind_all(self, sequence):
+        raise AttributeError("'unbind_all' is not allowed, because it would delete necessary internal callbacks for all widgets")
+
+    def bind_all(self, sequence=None, func=None, add=None):
+        raise AttributeError("'bind_all' is not allowed, could result in undefined behavior")
 
     def place(self, **kwargs):
         """

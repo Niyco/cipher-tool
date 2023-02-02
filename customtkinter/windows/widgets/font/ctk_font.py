@@ -1,6 +1,10 @@
 from tkinter.font import Font
 import copy
-from typing import List, Callable, Tuple, Optional, Literal
+from typing import List, Callable, Tuple, Optional
+try:
+    from typing import Literal
+except ImportError:
+    from typing_extensions import Literal
 
 from ..theme import ThemeManager
 
@@ -51,7 +55,6 @@ class CTkFont(Font):
         self._size_configure_callback_list.remove(callback)
 
     def create_scaled_tuple(self, font_scaling: float) -> Tuple[str, int, str]:
-
         """ return scaled tuple representation of font in the form (family: str, size: int, style: str)"""
         return self._family, round(-abs(self._size) * font_scaling), self._tuple_style_string
 

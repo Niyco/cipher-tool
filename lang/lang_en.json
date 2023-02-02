@@ -100,8 +100,7 @@
     "stage_railfence": {
         "name": "RailFence",
         "key": "Rails:",
-        "vertical": "Write Vertical, Read Horizontal",
-        "horizontal": "Write Horizontal, Read Vertical",
+        "offset": "Offset:",
         "encode": "Encrypt"
     }
 }

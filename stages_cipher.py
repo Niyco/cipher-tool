@@ -922,6 +922,114 @@ class RailFence(Stage):
         super().__init__(update_output)
         self.encode =  tk.IntVar(value=0)
         self.key = tk.StringVar(value='2')
+        self.offset = tk.StringVar(value='0')
+        self.key.trace('w', self.input_update)
+        self.offset.trace('w', self.input_update)
+        self.encode.trace('w', self.encode_update)
+        self.update_vars = [0, 2, 0]
+
+    def setup(self, frame, constants, font):
+        super().setup(self, frame, constants, font)
+        self.key_label = ctk.CTkLabel(frame, font=font, text=self.texts['key'])
+        self.key_input = ctk.CTkEntry(frame, font=font, justify='center', width=30,
+                                      textvariable=self.key)
+        self.offset_label = ctk.CTkLabel(frame, font=font, text=self.texts['offset'])
+        self.offset_input = ctk.CTkEntry(frame, font=font, justify='center', width=30,
+                                      textvariable=self.offset)
+        self.encode_switch = ctk.CTkSwitch(frame, variable=self.encode, text=self.texts['encode'],
+                                           font=self.font)
+        self.key_input.bind('<MouseWheel>', self.key_scroll)
+        self.offset_input.bind('<MouseWheel>', self.offset_scroll)
+
+    def key_scroll(self, event):
+        self.key.set(str(max(min(self.update_vars[1] + event.delta // 120, 30), 2)))
+
+    def offset_scroll(self, event):
+        max_ = int(self.key.get()) * 2 - 3
+        self.offset.set(str(max(min(self.update_vars[2] + event.delta // 120, max_), 0)))
+
+    def input_update(self, var_name, *args):
+        if var_name == str(self.key):
+            value = self.key.get()
+            min_ = 1
+            max_ = 31
+            index = 1
+        else:
+            value = self.offset.get()
+            min_ = -1
+            max_ = int(self.key.get()) * 2 - 2
+            index = 2
+            
+        if value.isnumeric():
+            value = int(value)
+            if min_ < value and value < max_:
+                self.update_vars[index] = value
+                self.update_output(self)
+
+    def encode_update(self, *args):
+        self.update_vars[0] = self.encode.get()
+        self.update_output(self)
+
+    @staticmethod
+    def update(text, constants, encode, rails, offset):
+        def looping_counter(rails):
+            rail_length = len(rails)
+            cycle_length = rail_length * 2 - 2
+            i = 0
+            cycle = 0
+            rail = 0
+            while True:
+                if rail == 0 or rail == rail_length - 1:
+                    yield rails[rail] + i // cycle_length
+                else:
+                    yield rails[rail] + i // (rail_length - 1)
+
+                i += 1
+                cycle = i % cycle_length
+                rail = cycle - 2 * (cycle // rail_length) * (cycle % rail_length + 1)
+
+        length = len(text) + offset
+        cycle_length = rails * 2 - 2
+        rail_lengths = [0, (length - 1) // cycle_length + 1]
+        for i in range(rails - 2):
+            rail_length = length // cycle_length * 2
+            if length % cycle_length > i + 1:
+                rail_length += 1
+            if length % cycle_length > cycle_length - i - 1:
+                rail_length += 1
+            rail_lengths.append(rail_lengths[i + 1] + rail_length)
+        counter = looping_counter(rail_lengths)
+
+        if encode:
+            result = [''] * length
+            for i in range(length):
+                result[next(counter)] = text[i]
+            result = ''.join([x for x in result if x != 0])
+        else:
+            result = ''
+            for i in range(length):
+                result += text[next(counter) - offset].lower()
+            result = ''.join(result)
+
+        return (result, ())
+
+    def display(self):
+        self.frame.rowconfigure(0, weight=1)
+        self.frame.rowconfigure(3, minsize=12)
+        self.frame.rowconfigure(6, weight=1)
+        self.frame.columnconfigure(0, weight=1)
+        self.frame.columnconfigure(1, weight=1)
+        self.key_label.grid(column=0, row=1, pady=0, padx=10, sticky='SE')
+        self.key_input.grid(column=0, row=2, pady=12, padx=10, sticky='NE')
+        self.offset_label.grid(column=1, row=1, pady=0, padx=10, sticky='SW')
+        self.offset_input.grid(column=1, row=2, pady=12, padx=10, sticky='NW')
+        self.encode_switch.grid(column=0, row=6, padx=15, pady=15, sticky='SE')
+
+class Scytale(Stage):
+    def __init__(self, update_output):
+        super().__init__(update_output)
+        self.encode =  tk.IntVar(value=0)
+        self.key = tk.StringVar(value='2')
         self.mode = tk.IntVar(value=0)
         self.mode.trace('w', self.mode_update)
         self.key.trace('w', self.input_update)

@@ -1,4 +1,4 @@
-__version__ = "5.0.0"
+__version__ = "5.0.5"
 
 import os
 import sys
@@ -12,6 +12,10 @@ from .windows.widgets.font import FontManager
 from .windows.widgets.scaling import ScalingTracker
 from .windows.widgets.theme import ThemeManager
 from .windows.widgets.core_rendering import DrawEngine
+
+# import base widgets
+from .windows.widgets.core_rendering import CTkCanvas
+from .windows.widgets.core_widget_classes import CTkBaseClass
 
 # import widgets
 from .windows.widgets import CTkButton
@@ -74,4 +78,4 @@ def set_window_scaling(scaling_value: float):
 
 def deactivate_automatic_dpi_awareness():
     """ deactivate DPI awareness of current process (windll.shcore.SetProcessDpiAwareness(0)) """
-    ScalingTracker.deactivate_automatic_dpi_awareness = False
+    ScalingTracker.deactivate_automatic_dpi_awareness = True

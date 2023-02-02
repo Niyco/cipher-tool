@@ -1,5 +1,10 @@
 import tkinter
-from typing import Union, Tuple, List, Dict, Callable, Optional, Literal
+import copy
+from typing import Union, Tuple, List, Dict, Callable, Optional
+try:
+    from typing import Literal
+except ImportError:
+    from typing_extensions import Literal
 
 from .theme import ThemeManager
 from .font import CTkFont
@@ -317,7 +322,7 @@ class CTkSegmentedButton(CTkFrame):
         elif attribute_name == "font":
             return self._font
         elif attribute_name == "values":
-            return self._value_list
+            return copy.copy(self._value_list)
         elif attribute_name == "variable":
             return self._variable
         elif attribute_name == "dynamic_resizing":
@@ -407,4 +412,10 @@ class CTkSegmentedButton(CTkFrame):
             self._create_button_grid()
         else:
             raise ValueError(f"CTkSegmentedButton does not contain value '{value}'")
+
+    def bind(self, sequence=None, command=None, add=None):
+        raise NotImplementedError
+
+    def unbind(self, sequence=None, funcid=None):
+        raise NotImplementedError
 

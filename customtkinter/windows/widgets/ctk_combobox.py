@@ -1,5 +1,6 @@
 import tkinter
 import sys
+import copy
 from typing import Union, Tuple, Callable, List, Optional
 
 from .core_widget_classes import DropdownMenu
@@ -102,25 +103,28 @@ class CTkComboBox(CTkBaseClass):
                                     font=self._apply_font_scaling(self._font))
 
         self._create_grid()
-
-        # insert default value
-        if len(self._values) > 0:
-            self._entry.insert(0, self._values[0])
-        else:
-            self._entry.insert(0, "CTkComboBox")
-
+        self._create_bindings()
         self._draw()  # initial draw
-
-        # event bindings
-        self._canvas.tag_bind("right_parts", "<Enter>", self._on_enter)
-        self._canvas.tag_bind("dropdown_arrow", "<Enter>", self._on_enter)
-        self._canvas.tag_bind("right_parts", "<Leave>", self._on_leave)
-        self._canvas.tag_bind("dropdown_arrow", "<Leave>", self._on_leave)
-        self._canvas.tag_bind("right_parts", "<Button-1>", self._clicked)
-        self._canvas.tag_bind("dropdown_arrow", "<Button-1>", self._clicked)
 
         if self._variable is not None:
             self._entry.configure(textvariable=self._variable)
+
+        # insert default value
+        if self._variable is None:
+            if len(self._values) > 0:
+                self._entry.insert(0, self._values[0])
+            else:
+                self._entry.insert(0, "CTkComboBox")
+
+    def _create_bindings(self, sequence: Optional[str] = None):
+        """ set necessary bindings for functionality of widget, will overwrite other bindings """
+        if sequence is None:
+            self._canvas.tag_bind("right_parts", "<Enter>", self._on_enter)
+            self._canvas.tag_bind("dropdown_arrow", "<Enter>", self._on_enter)
+            self._canvas.tag_bind("right_parts", "<Leave>", self._on_leave)
+            self._canvas.tag_bind("dropdown_arrow", "<Leave>", self._on_leave)
+            self._canvas.tag_bind("right_parts", "<Button-1>", self._clicked)
+            self._canvas.tag_bind("dropdown_arrow", "<Button-1>", self._clicked)
 
     def _create_grid(self):
         self._canvas.grid(row=0, column=0, rowspan=1, columnspan=1, sticky="nsew")
@@ -197,6 +201,7 @@ class CTkComboBox(CTkBaseClass):
 
             self._entry.configure(bg=self._apply_appearance_mode(self._fg_color),
                                   fg=self._apply_appearance_mode(self._text_color),
+                                  readonlybackground=self._apply_appearance_mode(self._fg_color),
                                   disabledbackground=self._apply_appearance_mode(self._fg_color),
                                   disabledforeground=self._apply_appearance_mode(self._text_color_disabled),
                                   highlightcolor=self._apply_appearance_mode(self._fg_color),
@@ -322,7 +327,7 @@ class CTkComboBox(CTkBaseClass):
         elif attribute_name == "dropdown_font":
             return self._dropdown_menu.cget("font")
         elif attribute_name == "values":
-            return self._values
+            return copy.copy(self._values)
         elif attribute_name == "state":
             return self._state
         elif attribute_name == "hover":
@@ -391,17 +396,23 @@ class CTkComboBox(CTkBaseClass):
     def get(self) -> str:
         return self._entry.get()
 
-    def _clicked(self, event=0):
+    def _clicked(self, event=None):
         if self._state is not tkinter.DISABLED and len(self._values) > 0:
             self._open_dropdown_menu()
 
-    def bind(self, sequence=None, command=None, add=None):
+    def bind(self, sequence=None, command=None, add=True):
         """ called on the tkinter.Entry """
-        return self._entry.bind(sequence, command, add)
+        if not (add == "+" or add is True):
+            raise ValueError("'add' argument can only be '+' or True to preserve internal callbacks")
+        self._entry.bind(sequence, command, add=True)
 
-    def unbind(self, sequence, funcid=None):
+    def unbind(self, sequence=None, funcid=None):
         """ called on the tkinter.Entry """
-        return self._entry.unbind(sequence, funcid)
+        if funcid is not None:
+            raise ValueError("'funcid' argument can only be None, because there is a bug in" +
+                             " tkinter and its not clear whether the internal callbacks will be unbinded or not")
+        self._entry.unbind(sequence, None)  # unbind all callbacks for sequence
+        self._create_bindings(sequence=sequence)  # restore internal callbacks for sequence
 
     def focus(self):
         return self._entry.focus()

@@ -1,6 +1,10 @@
 import tkinter
 import math
-from typing import Union, Tuple, Optional
+from typing import Union, Tuple, Optional, Callable
+try:
+    from typing import Literal
+except ImportError:
+    from typing_extensions import Literal
 
 from .core_rendering import CTkCanvas
 from .theme import ThemeManager
@@ -29,7 +33,7 @@ class CTkProgressBar(CTkBaseClass):
 
                  variable: Union[tkinter.Variable, None] = None,
                  orientation: str = "horizontal",
-                 mode: str = "determinate",
+                 mode: Literal["determinate", "indeterminate"] = "determinate",
                  determinate_speed: float = 1,
                  indeterminate_speed: float = 1,
                  **kwargs):
@@ -58,6 +62,7 @@ class CTkProgressBar(CTkBaseClass):
         self._variable = variable
         self._variable_callback_blocked = False
         self._variable_callback_name = None
+        self._loop_after_id = None
 
         # shape
         self._corner_radius = ThemeManager.theme["CTkProgressBar"]["corner_radius"] if corner_radius is None else corner_radius
@@ -249,13 +254,15 @@ class CTkProgressBar(CTkBaseClass):
         return self._determinate_value
 
     def start(self):
-        """ start indeterminate mode """
+        """ start automatic mode """
         if not self._loop_running:
             self._loop_running = True
             self._internal_loop()
 
     def stop(self):
-        """ stop indeterminate mode """
+        """ stop automatic mode """
+        if self._loop_after_id is not None:
+            self.after_cancel(self._loop_after_id)
         self._loop_running = False
 
     def _internal_loop(self):
@@ -265,13 +272,14 @@ class CTkProgressBar(CTkBaseClass):
                 if self._determinate_value > 1:
                     self._determinate_value -= 1
                 self._draw()
-                self.after(20, self._internal_loop)
+                self._loop_after_id = self.after(20, self._internal_loop)
             else:
                 self._indeterminate_value += self._indeterminate_speed
                 self._draw()
-                self.after(20, self._internal_loop)
+                self._loop_after_id = self.after(20, self._internal_loop)
 
     def step(self):
+        """ increase progress """
         if self._mode == "determinate":
             self._determinate_value += self._determinate_speed / 50
             if self._determinate_value > 1:
@@ -281,13 +289,18 @@ class CTkProgressBar(CTkBaseClass):
             self._indeterminate_value += self._indeterminate_speed
             self._draw()
 
-    def bind(self, sequence=None, command=None, add=None):
+    def bind(self, sequence: str = None, command: Callable = None, add: Union[str, bool] = True):
         """ called on the tkinter.Canvas """
-        return self._canvas.bind(sequence, command, add)
+        if not (add == "+" or add is True):
+            raise ValueError("'add' argument can only be '+' or True to preserve internal callbacks")
+        self._canvas.bind(sequence, command, add=True)
 
-    def unbind(self, sequence, funcid=None):
-        """ called on the tkinter.Canvas """
-        return self._canvas.unbind(sequence, funcid)
+    def unbind(self, sequence: str = None, funcid: str = None):
+        """ called on the tkinter.Label and tkinter.Canvas """
+        if funcid is not None:
+            raise ValueError("'funcid' argument can only be None, because there is a bug in" +
+                             " tkinter and its not clear whether the internal callbacks will be unbinded or not")
+        self._canvas.unbind(sequence, None)
 
     def focus(self):
         return self._canvas.focus()
