@@ -1,9 +1,7 @@
 # Cipher-Tool
-A python program containing tools for encrypting and decrypting classical ciphers
+A python program containing tools for encrypting and decrypting classical ciphers, built off the framework of [Spacejoey86's Cipher Tool](https://github.com/spacejoey86/Cipher-tool)
 
-Intended to be a replacement for [Spacejoey86's Cipher Tool](https://github.com/spacejoey86/Cipher-tool)
-
-Feature requests or bug reports are welcome, but any specifc code won't be used (I want to write it myself :>) - please only suggest generalized algorithms
+Feature requests or bug reports are welcome, but any specifc code won't be used
 
 ## Ciphers supported:
 * Morse Code
@@ -26,3 +24,10 @@ Feature requests or bug reports are welcome, but any specifc code won't be used 
 * Strip Text
 * Block Text
 * Add Spaces
+
+## Licensing
+This software is licensed under the MIT license
+
+Two libraries are packaged with this software:
+- [CustomTkinter](https://customtkinter.tomschimansky.com/) ([license](customtkinter/LICENSE)) under `customtkinter/`
+- [Darkdetect](https://pypi.org/project/darkdetect/) ([license](darkdetect/LICENSE)) under `darkdetect/`
