@@ -1,0 +1,106 @@
+{
+	"title": "Cipher Tool",
+	"stage_content": "Stage options",
+	"stage_list": "Stages",
+	"output": "Output",
+	"radio_text": "Text",
+	"radio_analysis": "Analysis",
+	"radio_cipher": "Ciphers",
+	"stage_input": {
+		"name": "Input"
+	},
+	"stage_uppercase": {
+		"name": "Upper Case"
+	},
+	"stage_lowercase": {
+		"name": "Lower Case"
+	},
+	"stage_reverse": {
+		"name": "Reverse"
+	},
+	"stage_strip": {
+		"name": "Strip Text",
+		"checkbox": "Strip Spaces"
+	},
+	"stage_block": {
+		"name": "Block Text",
+		"label": "Block Length:"
+	},
+	"stage_spaces": {
+		"name": "Add spaces",
+		"label": "Complexity:"
+	},
+	"stage_length": {
+		"name": "Length",
+		"label": "Length:"
+	},
+	"stage_frequency": {
+		"name": "Frequency Analysis",
+		"radio_1": "Monograms",
+		"radio_2": "Bigrams",
+		"radio_3": "Trigrams",
+		"checkbox": "Alphabetic Only"
+	},
+	"stage_ioc": {
+		"name": "Index of Coincidence",
+		"text_ioc": "IoC:",
+		"english_ioc": "English:",
+		"random_ioc": "Random:"
+	},
+	"stage_substitutionfinder": {
+		"name": "Substitution Finder",
+		"results_label": "Results:",
+		"iterations_label": "Iterations:",
+		"update_button": "Calculate"
+	},
+	"stage_binarycode": {
+		"name": "Binary Codes",
+		"cipher_radio_1": "Morse Code",
+		"cipher_radio_2": "Baconian Cipher",
+		"cipher_radio_3": "Binary Alphabet",
+		"cipher_radio_4": "Baudot (ITA2)",
+		"option_radio_1": "I-J and U-V Combined",
+		"option_radio_2": "I-J and U-V Separate",
+		"option_radio_3": "A = 0 ... Z = 25",
+		"option_radio_4": "A = 1 ... Z = 26",
+		"option_radio_5": "LSB on Right",
+		"option_radio_6": "LSB on Left",
+		"label_1": "Letter Separator:",
+		"label_2": "Word Separator:",
+		"encode": "Encode",
+		"space": "Space"
+	},
+	"stage_caesar": {
+		"name": "Caesar",
+		"label": "Shift:",
+		"encode": "Encrypt"
+	},
+	"stage_substitution": {
+		"name": "Simple Substitution",
+		"button_1": "Substitute",
+		"button_2": "Unsubstitute",
+		"keyword": "Keyword",
+		"encode": "Encrypt"
+	},
+    "stage_affine": {
+        "name": "Affine",
+        "alpha_label": "Alpha (α):",
+        "beta_label": "Beta (β):",
+        "encode": "Encrypt"
+    },
+	"stage_vigenere": {
+		"name": "Vigenere",
+		"keyword_length": "Length:",
+		"keyword_contents": "Keyword:",
+		"radio_vigenere": "Vigenere",
+		"radio_beaufort": "Beaufort",
+		"frequencies": "Decrypted Frequencies:",
+		"encode": "Encrypt"
+	},
+    "stage_railfence": {
+        "name": "RailFence",
+        "key": "Rails:",
+        "offset": "Offset:",
+        "encode": "Encrypt"
+    }
+}

@@ -159,16 +159,6 @@ class Constants:
         return color_hex
 
     def load(self):
-        theme_file = open(self.theme_path + self.theme_name + '.json', encoding='utf-8')
-        self.theme = json.load(theme_file)
-        theme_file.close()
-        lang_file = open(self.lang_path + 'lang_' + self.lang_name + '.json', encoding='utf-8')
-        self.lang = json.load(lang_file)
-        lang_file.close()
-        freq_file = open(self.lang_path + 'freq_' + self.lang_name + '.json', encoding='utf-8')
-        freq_data = json.load(freq_file)
-        freq_file.close()
-
         if sys.platform.startswith('darwin'): self.os = 'macOS'
         elif sys.platform.startswith('win'): self.os = 'Windows'
         elif sys.platform.startswith('linux'): self.os = 'Linux'
@@ -176,14 +166,24 @@ class Constants:
         elif self.mode_name == 'dark': self.mode = 1
         else: self.mode = self.modes.index(darkdetect.theme().lower())
 
-        self.letter_frequencies = freq_data['letters']
+        with open(self.theme_path + self.theme_name + '.json', encoding='utf-8') as f:
+            self.theme = json.load(f)
+        with open(self.lang_path + self.lang_name + '_lang.json', encoding='utf-8') as f:
+            self.lang = json.load(f)
+        with open(self.lang_path + self.lang_name + '_1grams.json', encoding='utf-8') as f:
+            monograms_data = json.load(f)
+        self.letter_frequencies = {letter: count / monograms_data['total'] for letter, count in monograms_data['count'].items()}
         self.language_ioc = sum([self.letter_frequencies[x] ** 2 for x in self.letter_frequencies])
         self.alphabet = list(sorted(self.letter_frequencies.keys()))
-        self.bigram_frequencies = freq_data['bigrams']
-        self.min_word_frequency = 10 ** ((0 - len(freq_data['words']) + 1) / 100)
+        with open(self.lang_path + self.lang_name + '_2grams.json', encoding='utf-8') as f:
+            bigrams_data = json.load(f)
+        self.bigram_frequencies = {bigram: count / bigrams_data['total'] for bigram, count in bigrams_data['count'].items()}
+        with open(self.lang_path + self.lang_name + '_dict.json', encoding='utf-8') as f:
+            word_data = json.load(f)
+        self.min_word_frequency = 10 ** ((0 - len(word_data) + 1) / 100)
         self.max_word_length = 0
         self.word_frequencies = {}
-        for index, bucket in enumerate(freq_data['words']):
+        for index, bucket in enumerate(word_data):
             freq = 10 ** (-index / 100)
             for word in bucket:
                 length = len(word)

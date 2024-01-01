@@ -5,4 +5,4 @@ Word frequencies taken from the python [wordfreq library](https://pypi.org/proje
 - Lists are sorted alphabetically
 - The index of each list is the negative of its frequency
 
-Monogram and bigram frequencies taken from [practical cryptography](http://practicalcryptography.com/cryptanalysis/letter-frequencies-various-languages/english-letter-frequencies/)
+Monogram and bigram frequencies taken from [practical cryptography](https://web.archive.org/web/20230531035839/http://practicalcryptography.com/cryptanalysis/letter-frequencies-various-languages/english-letter-frequencies/) which uses the [Leipzig Corpora Collection](https://wortschatz.uni-leipzig.de/enw)
